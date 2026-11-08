@@ -1,18 +1,126 @@
 # Changelog
 
-What changed on [svqtriana.com](https://svqtriana.com), newest first.
+Qué cambia en [svqtriana.com](https://svqtriana.com), de lo más reciente a lo
+más antiguo.
 
-The version is the deploy date — `vYYYYMMDD`, with `.N` for a second deploy the
-same day. It is the same string the footer shows and the same one on every
-`?v=` in the page source, so a visitor reading `v20260905` at the bottom of the
-page and a maintainer debugging a stale cache are looking at the same number.
-
-Written by hand. `scripts/bump-version.py` moves the version everywhere else,
-but not this file: "various fixes" would defeat the point of having it.
+La versión es la fecha del despliegue: `vYYYYMMDD`, con `.N` para un segundo
+despliegue el mismo día. Es la misma cadena que muestra el pie de página y la
+que el build lee de la primera entrada de este fichero.
 
 ---
 
-## v20260905
+## v20261108
+
+Rediseño de páginas y componentes. Los textos, las URLs y los datos de la peña
+no cambian; cambia cómo se disponen y cómo se ven.
+
+### El sitio
+
+- **Cabecera con nombre**: el escudo va acompañado de «SVQ Triana · Peña
+  Sevillista» y la sección activa se subraya en albero.
+- **Cabeceras de página oscuras** en `/nosotros`, `/productos`, `/media` y
+  `/encuentro`, con el azulejo de fondo, a juego con la portada.
+- **El Puente de Triana, redibujado**: arcos, aros que menguan hacia la clave,
+  pilas y farolas. Ya no se deforma con el ancho de pantalla. Aparece sobre el
+  río al pie del hero, en el pie de página y en el cierre de la historia.
+- **Franjas rojiblancas** del escudo, solo en el pie y en el cierre de
+  `/nosotros`.
+- **Portada**: «Hazte socio» a dos columnas, «La peña» en mosaico con fotos
+  grandes y la cita de Triana con más presencia.
+- **Nuestra historia**: texto a ancho de lectura, fechas que caben en su
+  etiqueta, fotos completas en formato álbum y el último hito como cierre con
+  el botón de hacerse socio.
+- **Material**: cuatro tarjetas por fila en escritorio y fotos enteras, sin
+  recortar las pegatinas ni la bandera.
+- **Galería**: el vídeo destacado ocupa dos filas y los dos siguientes se
+  apilan a su lado, sin huecos.
+- **Encuentro**: el hueco del mapa tiene el alto del mapa, así que la página no
+  salta al pulsar «Ver mapa».
+- **Pie** en tres columnas: marca y redes, contacto y secciones.
+- **El hero ya no se corta en móviles estrechos** ni con la letra del sistema
+  ampliada: «TEMPORADA», el antetítulo y los botones caben siempre en
+  pantalla. Una prueba nueva (`tests/overflow.spec.ts`) lo comprueba en las
+  cinco páginas.
+
+### Rendimiento y accesibilidad
+
+Lighthouse móvil sobre `dist/`, con Lighthouse CI:
+
+| Página | Performance | Accesibilidad | Best Practices | SEO | CLS |
+|---|---:|---:|---:|---:|---:|
+| `/` | 95 | 100 | 100 | 100 | 0 |
+| `/nosotros` | 100 | 100 | 100 | 100 | 0 |
+| `/productos` | 94 | 100 | 100 | 100 | 0 |
+| `/media` | 96 | 100 | 100 | 100 | 0 |
+| `/encuentro` | 98 | 100 | 100 | 100 | 0 |
+
+---
+
+## v20261105
+
+Migración del sitio a Astro 7 y Tailwind CSS v4. El contenido, las URLs y los
+datos de la peña no cambian; cambia cómo se genera y se sirve la web.
+
+### El sitio
+
+- **Las cinco secciones siguen en su URL**, sin `.html` y sin barra final:
+  `/`, `/nosotros`, `/productos`, `/media` y `/encuentro`.
+- **`/encuentro` pasa a ser pública**: se enlaza en el menú, se indexa y entra
+  en el sitemap. Sigue mostrando el cartel de la Cervecería el Punto de Triana,
+  ahora con el mapa bajo demanda.
+- **Vídeos con enlace a YouTube**, sin iframes ni cookies de terceros.
+- **Mapa de Google bajo demanda**: solo se carga al pulsar «Ver mapa».
+- **Material sin carrito**, como antes: se pide por Instagram o email.
+- **Diseño nuevo** con los motivos del barrio (azulejo, Puente de Triana y río),
+  tipografía Fraunces para los titulares y Glacial Indifference para el texto.
+
+### Rendimiento y accesibilidad
+
+- HTML estático, sin jQuery, Bootstrap ni carruseles de terceros.
+- JavaScript propio mínimo: menú móvil, galerías de producto y mapa bajo
+  demanda.
+- Imágenes en AVIF y WebP con `astro:assets`; fuentes locales en WOFF2.
+- Sin scripts inline ejecutables: compatible con la CSP sin `'unsafe-inline'`.
+- Lighthouse móvil sobre `dist/`, con Lighthouse CI:
+
+  | Página | Performance | Accesibilidad | Best Practices | SEO | CLS |
+  |---|---:|---:|---:|---:|---:|
+  | `/` | 96 | 100 | 100 | 100 | 0 |
+  | `/nosotros` | 100 | 100 | 100 | 100 | 0 |
+  | `/productos` | 95 | 100 | 100 | 100 | 0 |
+  | `/media` | 96 | 100 | 100 | 100 | 0 |
+  | `/encuentro` | 98 | 100 | 100 | 100 | 0 |
+
+  El CI falla si Performance baja de 90, Accesibilidad o SEO de 100, Best
+  Practices de 95 o CLS supera 0,02.
+
+### Infraestructura
+
+- Publicación con GitHub Actions y GitHub Pages (sin cambiar de proveedor); las
+  actions van fijadas por SHA.
+- `sw.js` se mantiene como kill-switch del service worker antiguo.
+- La CSP se estrecha: fuera jQuery, fuera `'unsafe-inline'` de `style-src` y
+  fuera YouTube de `frame-src`. Solo queda Google Maps, y bajo demanda.
+- Los assets con hash de `/_astro/*` se cachean un año en el edge y en el
+  navegador. `sw.js` sigue sin cachearse.
+- `terraform validate` y `terraform fmt -check` corren en CI; el `apply` sigue
+  siendo un acto humano en el corte.
+
+### Antes de la migración
+
+Última medición de producción del sitio anterior (`v20260905`), según su
+CHANGELOG: Performance 82, Accesibilidad 100, CLS 0, TBT 0 ms, 436 KB y 19
+peticiones.
+
+---
+
+## Historial anterior a la migración
+
+Entradas del sitio en HTML escrito a mano, tal como estaban en este repositorio
+antes de pasar a Astro. Se conservan sin cambios (en inglés, como se
+escribieron).
+
+### v20260905
 
 The first full maintenance pass in a year, and the season 26/27 poster.
 
@@ -95,7 +203,7 @@ Measured with Lighthouse against production, before and after:
 
 ---
 
-## Before v20260905
+### Before v20260905
 
 The site was unmaintained for roughly a year. Its history is in the commit log;
 this file starts where the versioning does.

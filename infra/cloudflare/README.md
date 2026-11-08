@@ -9,9 +9,10 @@ The site is hosted on GitHub Pages, which serves static files and **cannot send
 custom response headers**. The repository carried an `.htaccess` from 2025 to
 2026-09-05 setting a Content-Security-Policy, HSTS, `X-Frame-Options` and the
 rest. None of it ever took effect — GitHub Pages does not run Apache, so the
-file was inert. It was deleted once these rules were applied and verified. That is why <https://securityheaders.com/?q=https%3A%2F%2Fsvqtriana.com>
-has been reporting a bare response, and why issue #2 could not be fixed inside
-the repository.
+file was inert. It was deleted once these rules were applied and verified. That
+is why <https://securityheaders.com/?q=https%3A%2F%2Fsvqtriana.com> has been
+reporting a bare response, and why issue #2 could not be fixed inside the
+repository.
 
 Cloudflare is already proxying the domain, which makes it the one place that
 *can* set them:
@@ -28,9 +29,25 @@ x-github-request-id: ...    <- origin is GitHub Pages
 | File | What it sets |
 |---|---|
 | `headers.tf` | The security response headers, derived from what the pages actually load. |
-| `caching.tf` | Edge and browser cache lifetimes. This is what the deleted `.htaccess` `Expires` block was reaching for. |
+| `caching.tf` | Edge and browser cache lifetimes. Hashed `/_astro/*` assets get a year; HTML stays short. |
 | `analytics.tf` | Cloudflare Web Analytics, injected at the edge. |
 | `zone-settings.tf` | Zone settings with a reason to differ from Cloudflare's defaults: the TLS floor, and Bot Fight Mode / JavaScript Detections held off. Read its comments before touching anything in the dashboard. |
+
+## The policy tracks the Astro build
+
+The migration to Astro 7 removed the last reasons for the wide policy, and each
+removal is asserted by `scripts/check-dist.mjs` on every build:
+
+| Removed | Why it can go |
+|---|---|
+| `https://code.jquery.com` from `script-src` | No jQuery. Product galleries are plain `scroll-snap` driven by the site's own tiny script. |
+| `'unsafe-inline'` from `style-src` | No `style=""` attribute or `<style>` block in any page. The check fails the build if one reappears. |
+| `https://www.youtube.com` from `frame-src` | Videos are links to YouTube, not embeds. |
+| CSS/JS cache rule without fingerprints | Every stylesheet and script is emitted under `/_astro/` with a content hash. |
+
+`frame-src https://www.google.com` stays: `/encuentro` loads the Maps iframe,
+but only after the visitor presses "Ver mapa". The iframe does not exist in the
+served HTML, so no third-party request happens on page load.
 
 ## Running it
 
@@ -108,12 +125,12 @@ dotf secrets run --only CLOUDFLARE_API_TOKEN -- \
 
 ## Decisions: one left open on purpose, two closed
 
-**HSTS is off** (`enable_hsts = false`). It is the one setting here that is hard
-to walk back: once a browser has seen the header it refuses plain HTTP for the
-whole `max-age`, and undoing it early means serving `max-age=0` and waiting for
-every visitor to return. The apex and `www` both serve HTTPS today, so turning
-it on is safe — but it should be a deliberate flip, not a side effect of the
-first apply. Preload stays off regardless; that list lives in the browsers.
+**HSTS is on** (`enable_hsts = true`, since 2026-09-05). It is the one setting
+here that is hard to walk back: once a browser has seen the header it refuses
+plain HTTP for the whole `max-age`, and undoing it early means serving
+`max-age=0` and waiting for every visitor to return. The apex and `www` both
+serve HTTPS, so it stays on. Preload stays off regardless; that list lives in
+the browsers.
 
 **Web Analytics is the only analytics.** Google Analytics was removed on
 2026-09-05. Both counted the same visits, and GA4 cost 168K per visit, the
@@ -131,8 +148,9 @@ inline script with a per-request ray id on every HTML response, which no CSP
 hash can allow. Cloudflare will copy a nonce from a nonce-based CSP into that
 script, but a nonce only means something if it changes per request, and a
 static site behind a static header from `headers.tf` cannot mint one.
-`zone-settings.tf` declares it off and explains why;
-`edge-drift.yml` fails if an inline script ever reappears in production.
+`zone-settings.tf` declares it off and explains why; the Astro build asserts
+there is no inline script of its own, so an inline script in production can
+only come from the edge.
 
 ## Order matters: apply after the site deploys, not before
 
@@ -159,12 +177,15 @@ Then re-run <https://securityheaders.com/?q=https%3A%2F%2Fsvqtriana.com>.
 
 A CSP is the one header here that can break the site rather than merely fail to
 protect it. After applying, load every page with the browser console open and
-confirm there are no `Refused to load` messages — the slider, the Google Maps
-embed on `/encuentro` and the analytics beacon are the parts most likely to trip
-it.
+confirm there are no `Refused to load` messages — the Google Maps iframe on
+`/encuentro` and the analytics beacon are the parts most likely to trip it.
 
 ## Applied
 
 Applied 2026-09-05: `Plan: 2 to add, 0 to change, 0 to destroy`. Verified live
 with the curl above, and by loading every page against the CSP with the console
 open. `.htaccess` was deleted in the same change.
+
+The Astro migration narrows the policy further (no jQuery, no `'unsafe-inline'`
+in `style-src`, no YouTube in `frame-src`) and adds the `/_astro/*` cache rule.
+Those changes are applied at the cutover, **after** the new build is live.

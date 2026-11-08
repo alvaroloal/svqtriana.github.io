@@ -1,117 +1,135 @@
 # svqtriana.com
 
-Website of **PS SVQ Triana**, a Sevilla FC supporters' club founded on 27 July
-2019 in the Triana district of Seville.
+Web de la **Peña Sevillista SVQ Triana**, peña sevillista fundada el 27 de julio
+de 2019 en el barrio de Triana, Sevilla.
 
-Five hand-written HTML pages, no build step, no framework. Hosted on GitHub
-Pages, served through Cloudflare.
+Sitio estático generado con **Astro 7** y **Tailwind CSS v4**, publicado en
+GitHub Pages y servido a través de Cloudflare. Sin framework de UI, sin jQuery y
+sin scripts de terceros.
 
-## Running it locally
+## Puesta en marcha
+
+Requiere **Node 24 LTS** (Astro 7.4 exige `>=22.23.4`; el proyecto fija 24 en
+`.nvmrc` y en `engines`).
 
 ```sh
-scripts/serve.py 8000     # then open http://localhost:8000
+npm ci
+npm run dev        # http://localhost:4321
 ```
 
-**Use this rather than `python3 -m http.server`.** GitHub Pages resolves
-`/nosotros` to `nosotros.html`; the stock server does not, so it returns 404 for
-every link in the nav and makes the site look broken when it is not.
-
-## Layout
-
-| Path | What it is |
+| Comando | Qué hace |
 |---|---|
-| `*.html` | The five pages. Each is standalone: its own `<head>`, its own inlined critical CSS, and a copy of the shared header and footer. |
-| `css/` | `style.css` is the real stylesheet, hand-edited. There is no SASS build. |
-| `js/` | `performance.js` (nav toggle, footer year), and bxSlider plus `slider.js`, which only `/productos` loads. No Bootstrap JS — see *Traps*. |
-| `images/` | Masters. `images/webp/` holds the optimised copies the site actually serves. |
-| `infra/cloudflare/` | Response headers, cache rules and analytics, as Terraform. |
-| `scripts/` | `serve.py`, `to-webp.py`, `check_pages.py`, `bump-version.py`; `prune-bootstrap.py` and `compare-render.py` for the rare re-prune (runbook Job 4). |
-| `docs/` | Runbooks, the notes explaining decisions that look odd, and `docs/lessons/`: what broke, why, and what now catches it. |
-| `CHANGELOG.md` | What changed on each deploy. The footer version links here. |
+| `npm run dev` | Servidor de desarrollo con recarga. |
+| `npm run build` | Genera `dist/` con las 5 páginas, `404.html`, `sitemap.xml` y `llms.txt`. |
+| `npm run preview` | Sirve `dist/` como lo haría Astro. |
+| `npm run check` | `astro check`: tipos y diagnósticos. |
+| `npm run check:dist` | Invariantes sobre `dist/` (títulos, canonical, JSON-LD, assets, CSP, versión). |
+| `npm run test:e2e` | Playwright: accesibilidad, menú móvil, mapa, rutas y desbordes en móvil. |
+| `npm run test:lighthouse` | Lighthouse CI móvil sobre `dist/`. |
+| `npm run verify` | `check` + `build` + `check:dist` + `test:e2e`. |
 
-## The seasonal job
+`npm run preview` (y `scripts/serve-dist.mjs`, que usan las pruebas) resuelven
+`/nosotros` como `nosotros.html`, igual que GitHub Pages.
 
-Once a year the poster changes. That is most of the maintenance this site ever
-needs — see [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md) for
-the full checklist, but the short version:
+## Estructura
+
+| Ruta | Qué es |
+|---|---|
+| `src/pages/` | Las cinco páginas, `404.astro`, `sitemap.xml.ts` y `llms.txt.ts`. |
+| `src/layouts/BaseLayout.astro` | `<head>` común, cabecera, pie y el único script del sitio. |
+| `src/components/` | Cabecera, navegación móvil, pie, tarjetas, galerías, línea de tiempo y motivos decorativos. |
+| `src/data/` | Todo el contenido literal: web, temporada, productos, vídeos, historia, encuentro, JSON-LD. |
+| `src/assets/` | Maestros de imagen que procesa `astro:assets` (AVIF + WebP). |
+| `src/styles/global.css` | Tokens de Tailwind v4, tipografías y utilidades propias. |
+| `src/scripts/nav.ts` | Menú móvil, galerías de producto y mapa bajo demanda. |
+| `public/` | Ficheros que se sirven tal cual: `CNAME`, `ads.txt`, `robots.txt`, `sw.js`, iconos, fuentes y la imagen OG. |
+| `tests/` | Playwright: `a11y`, `mobile-nav`, `map`, `routes`, `overflow`. |
+| `scripts/` | `check-dist.mjs`, `serve-dist.mjs` y `convert-pulsera.mjs`. |
+| `infra/cloudflare/` | Headers, caché y analítica como Terraform. |
+| `docs/` | Runbooks y lecciones. |
+
+## El trabajo de temporada
+
+Una vez al año cambia el cartel. Es casi todo el mantenimiento que necesita el
+sitio: [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md).
+
+## Comprobaciones
 
 ```sh
-cp ~/Downloads/cartel-28.jpg images/
-scripts/to-webp.py images/cartel-28.jpg
-# then update index.html: heading, <img>, og:image, twitter:image, JSON-LD
-scripts/bump-version.py   # or nobody sees the new poster
+npm run verify
+terraform -chdir=infra/cloudflare validate
 ```
 
-## Checks
+El CI (`.github/workflows/checks.yml`) ejecuta tipos, build, invariantes de
+`dist/`, Playwright, Lighthouse y `terraform validate`. **Ahora mismo está
+desactivado**, igual que `deploy.yml`: los dos solo se lanzan a mano desde la
+pestaña Actions. Ejecuta `npm run verify` en local antes de publicar. Cómo
+reactivarlos está en el comentario de cada workflow.
+Cada comprobación existe porque algo se rompió de verdad en el sitio anterior.
+
+`npm audit --omit=dev` sale limpio: lo que se publica son ficheros estáticos,
+sin dependencias en tiempo de ejecución. Los avisos que muestra `npm audit`
+completo viven en la cadena de `@lhci/cli` → `lighthouse` → `puppeteer-core` y
+solo afectan a la máquina que ejecuta las pruebas, no al sitio.
+
+## Compartir el MVP sin tocar producción
+
+Este repositorio **no se ha desplegado**. Para enseñarlo al DevOps y a quien
+administra la web hay una vía aislada en Cloudflare Pages (plan gratis), con
+URL `*.pages.dev`, `noindex` y la CSP real de producción:
 
 ```sh
-scripts/check_pages.py                          # page invariants
-terraform -chdir=infra/cloudflare validate      # infrastructure
+npx --yes wrangler@4 login
+npx --yes wrangler@4 pages project create svqtriana-mvp --production-branch mvp
+npm ci
+npm run preview:cf
 ```
 
-CI runs both on every pull request, along with a route check and an asset check.
-Every one of those exists because the corresponding thing broke here at least
-once.
+`npm run preview:cf` construye, comprueba, prepara `dist/` y publica. No hace
+falta un `npm run build` aparte.
 
-## Traps
+Instrucciones completas, alternativa con GitHub y checklist de revisión:
+[`docs/runbooks/preview-cloudflare.md`](docs/runbooks/preview-cloudflare.md).
+No cambia DNS, ni la zona de `svqtriana.com`, ni el Pages de producción.
 
-Things that look like mistakes and are not, or look fine and are not.
+## Trampas
 
-- **`sw.js` must stay in the repository root.** A service worker can only
-  control URLs beneath the directory it is served from. In `js/` it would
-  control `js/` and nothing else. Widening the scope needs a
-  `Service-Worker-Allowed` header, and GitHub Pages cannot send headers.
-  Same reasoning for `ads.txt`, `robots.txt`, `llms.txt`, `CNAME`.
-  Full list: [`docs/root-files.md`](docs/root-files.md).
-- **Paths are case-sensitive in production.** `Ads.txt` sat in this repository
-  for a year while AdSense fetched `/ads.txt` and got a 404.
-- **There is no SASS build, and adding one back is a trap.** `css/style.scss`
-  and `css/style.css.map` used to sit beside `style.css` and had drifted to
-  1433 lines against 680; recompiling would have silently deleted half the
-  stylesheet. They were deleted for that reason. `style.css` is hand-edited.
-- **Changing a stylesheet or a script is not enough on its own.** Two caches
-  serve the old file under the same name: the service worker's, 30 days and
-  cache-first, and Cloudflare's edge, 7 days. Run `scripts/bump-version.py`:
-  it moves `CACHE_VERSION`, the `?v=` on every `css/` and `js/` URL, and the
-  footer stamp together, and stamps today's date as the version. Then write the
-  `CHANGELOG.md` entry by hand — `scripts/check_pages.py` fails until all five
-  agree, the changelog included.
-  The query string is what makes it a new cache key for both, so no purge is
-  needed.
+Cosas que parecen errores y no lo son, o que parecen inocuas y no lo son.
 
-  This paragraph used to say only "bump `CACHE_VERSION`", and the very next
-  change that moved rules out of an inline `<style>` and into `style.css`
-  forgot to. A documented knob is not a mechanism; the check is.
-- **The service worker caches your local edits too.** While `scripts/serve.py`
-  is running, editing `css/style.css` without changing the `?v=` leaves the
-  browser serving the copy the worker already holds — the edit looks like it
-  did nothing. Unregister it in DevTools → Application, or run in the console:
+- **`build.format: 'file'` no es un capricho.** Genera `dist/nosotros.html`, que
+  GitHub Pages sirve como `/nosotros` sin barra final. Con el formato por
+  defecto (`directory`) las URLs canónicas y el sitemap acabarían con barra, y
+  el sitio anterior no las tenía.
+- **`sw.js` sigue publicado aunque la web no registre ningún service worker.**
+  Es el kill-switch del worker antiguo: desregistra, borra las cachés
+  `svq-triana-*` y recarga. Debe seguir en la raíz al menos seis meses después
+  del corte. Ver [`docs/root-files.md`](docs/root-files.md).
+- **Nada de `<script>` inline ejecutable.** La CSP de Cloudflare no lleva
+  `'unsafe-inline'`, así que Astro compila a ficheros externos
+  (`inlineStylesheets: 'never'` y `vite.build.assetsInlineLimit: 0`).
+  `check:dist` falla si vuelve a aparecer uno. El JSON-LD sí va inline: es
+  `application/ld+json`, no se ejecuta y la CSP no lo bloquea.
+- **Tampoco `style=""`.** `check:dist` lo prohíbe; por eso `style-src` puede ir
+  sin `'unsafe-inline'`.
+- **El mapa de Google no está en el HTML.** Se inyecta al pulsar «Ver mapa»
+  desde `src/scripts/nav.ts`. La CSP permite el iframe, pero no se pide nada a
+  Google al cargar la página.
+- **Los vídeos son enlaces, no embeds.** Sin iframes de YouTube no hay cookies
+  de terceros ni `frame-src` para youtube.com.
+- **La versión del pie sale de `CHANGELOG.md`.** `version.ts` lee
+  `PUBLIC_SITE_VERSION` (lo fija `deploy.yml`) o, en local, la primera entrada
+  `## vYYYYMMDD`. Si no coinciden, `check:dist` falla.
+- **`compressHTML` está activo por defecto.** No lo desactives para «arreglar»
+  el HTML: cambia el espaciado, no el DOM, y solo hincha el fichero.
+- **Las rutas distinguen mayúsculas en producción.** En Windows/macOS no. Un
+  asset que resuelve en local puede dar 404 en Pages solo por la caja.
+- **Los headers vienen de Cloudflare, no del repo.** GitHub Pages no puede
+  enviarlos. Están en `infra/cloudflare/` y se aplican con Terraform.
 
-  ```js
-  navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()));
-  caches.keys().then(k => k.forEach(c => caches.delete(c)));
-  ```
+## Dónde están las decisiones
 
-  This cost real minutes here: a correct stylesheet change looked broken.
-- **The header and footer are copy-pasted across five files.** That is the cost
-  of having no templating; they used to be built in JavaScript, which hid the
-  whole nav from crawlers that do not run JS. `scripts/check_pages.py` fails if
-  the five copies drift apart.
-- **Do not add Bootstrap's JavaScript back without checking its major version.**
-  `css/bootstrap.css` is v4.3.1. The JS that used to ship alongside it was
-  v3.4.1, which toggles the v3 class `in` while the v4 CSS hides via
-  `.collapse:not(.show)` — the mobile menu was dead on every page for exactly
-  that reason. Nothing in the site uses a Bootstrap JS component now.
-- **Response headers come from Cloudflare, not from this repository.** GitHub
-  Pages cannot send them. They are defined in `infra/cloudflare/` and applied
-  with Terraform. There used to be an `.htaccess` here setting them; it never
-  did anything, because Pages does not run Apache, and it was deleted once the
-  Cloudflare rules went live.
-
-## Where the decisions are written down
-
-- [`docs/root-files.md`](docs/root-files.md) — why the root is not tidier
-- [`docs/lessons/_index.md`](docs/lessons/_index.md) — what broke, the mechanism, and what now catches it
-- [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md) — the recurring jobs
-- [`docs/runbooks/dns.md`](docs/runbooks/dns.md) — the request path, and what is safe to publish
-- [`infra/cloudflare/README.md`](infra/cloudflare/README.md) — why the headers live at the edge
+- [`docs/root-files.md`](docs/root-files.md) — por qué ciertos ficheros van en `public/` y por qué `sw.js` sigue ahí.
+- [`docs/lessons/_index.md`](docs/lessons/_index.md) — qué falló, el mecanismo y qué lo detecta ahora.
+- [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md) — los trabajos recurrentes.
+- [`infra/cloudflare/README.md`](infra/cloudflare/README.md) — por qué los headers viven en el edge.
+- [`CHANGELOG.md`](CHANGELOG.md) — qué cambia en cada despliegue.

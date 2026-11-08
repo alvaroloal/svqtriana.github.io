@@ -1,0 +1,68 @@
+name: deploy
+
+# Publica dist/ en GitHub Pages. Todas las actions van fijadas por SHA: una tag
+# se puede mover, un SHA no.
+#
+# Orden obligatorio en el corte (MIGRACION-ASTRO.md §15): cambiar antes
+# Settings -> Pages -> Source a "GitHub Actions". Con "Deploy from a branch",
+# el merge a main publicaría el código fuente de Astro y la web se caería.
+
+# DESACTIVADO de momento: la vista previa se publica con `npm run preview:cf`
+# (Cloudflare Pages) y este repo no publica en GitHub Pages. Solo se ejecuta a
+# mano (Actions -> deploy -> Run workflow). Para reactivarlo en el corte,
+# devuelve el disparador:
+#   on:
+#     push:
+#       branches: [main]
+#     workflow_dispatch:
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # El footer y el CHANGELOG comparten la misma cadena: la primera entrada
+      # `## vYYYYMMDD` del CHANGELOG es la versión de este despliegue.
+      - name: Versión del sitio = primera entrada de CHANGELOG.md
+        run: |
+          v=$(grep -m1 -oE '^## v[0-9]{8}(\.[0-9]+)?' CHANGELOG.md | cut -c4-)
+          test -n "$v" || { echo "CHANGELOG.md sin entrada de versión"; exit 1; }
+          echo "PUBLIC_SITE_VERSION=$v" >> "$GITHUB_ENV"
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm run check:dist
+
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

@@ -1,46 +1,70 @@
-# Why these files sit in the repository root
+# Por qué estos ficheros viven en `public/`
 
-Every file listed here looks like clutter and is not. Each one is fetched from a
-fixed path by something we do not control, so moving it into a folder breaks it
-silently — no error, no log, just a feature that stops working.
+Todo lo que está en `public/` se copia tal cual a `dist/` y se sirve desde la
+raíz del dominio. Varios de estos ficheros se piden desde una ruta fija por algo
+que no controlamos: moverlos a una carpeta los rompe en silencio — sin error,
+sin log, solo una función que deja de funcionar.
 
-| File | Fetched by | What moving it breaks |
+| Fichero | Quién lo pide | Qué rompe si se mueve |
 |---|---|---|
-| `sw.js` | The browser, via `navigator.serviceWorker.register('/sw.js')` | Its **scope**. A service worker may only control URLs beneath the directory it is served from, so `/js/sw.js` would control `/js/*` and nothing else — the pages would stop being cached. Widening the scope requires a `Service-Worker-Allowed` response header, and GitHub Pages does not let us set headers. The root is the only option on this host. |
-| `ads.txt` | Google AdSense crawler, at `/ads.txt` | Ad verification. Note the lowercase: GitHub Pages is case-sensitive, and the file shipped as `Ads.txt` for a year, so `/ads.txt` returned 404 in production while `/Ads.txt` returned 200. |
-| `robots.txt` | Every crawler, at `/robots.txt` | Nothing reads it anywhere else. |
-| `sitemap.xml` | Search engines, pointed at by `robots.txt` | It is referenced by absolute URL, so it could move — but there is no reason to. |
-| `llms.txt` | Proposed convention for LLM crawlers, at `/llms.txt` | See the note below. |
-| `CNAME` | GitHub Pages itself | The custom domain. |
-| `favicon.ico` | Browsers, which probe `/favicon.ico` when no `<link rel=icon>` matches | The tab icon fallback. |
+| `sw.js` | El navegador, por la ruta donde se registró el service worker antiguo | Su **scope**. Un service worker solo controla URLs bajo el directorio desde el que se sirve. En `/js/sw.js` controlaría `/js/*` y nada más, así que los navegadores con el worker viejo nunca recibirían el kill-switch. Ampliar el scope exige un header `Service-Worker-Allowed` y GitHub Pages no permite enviar headers. La raíz es la única opción. |
+| `ads.txt` | El crawler de Google AdSense, en `/ads.txt` | La verificación de anuncios. Ojo con las minúsculas: Pages distingue mayúsculas y el fichero estuvo un año como `Ads.txt`, así que `/ads.txt` devolvía 404 mientras `/Ads.txt` devolvía 200. |
+| `robots.txt` | Todos los crawlers, en `/robots.txt` | Nadie lo lee en otra ruta. |
+| `sitemap.xml` | Los buscadores, apuntados desde `robots.txt` | Se referencia por URL absoluta, así que podría moverse — pero no hay motivo. |
+| `llms.txt` | Convención propuesta para crawlers de LLM, en `/llms.txt` | Ver la nota de abajo. |
+| `CNAME` | GitHub Pages | El dominio propio. Si no llega a `dist/`, el deploy pierde svqtriana.com. |
+| `favicon.ico` | Los navegadores, que prueban `/favicon.ico` si ningún `<link rel=icon>` coincide | El icono de la pestaña. |
 
-## On `llms.txt`
+`sitemap.xml` y `llms.txt` no son ficheros estáticos: los genera
+`src/pages/sitemap.xml.ts` y `src/pages/llms.txt.ts` a partir de `src/data/`.
+Se sirven en la raíz por la misma razón que los demás.
 
-Added deliberately, with low expectations. It is a proposal
-([llmstxt.org](https://llmstxt.org), late 2024) and **no major AI crawler is
-known to consume it** — not OpenAI, not Anthropic, not Google. It costs a few
-lines and may pay off later.
+## El kill-switch: por qué `sw.js` sigue existiendo
 
-What actually determines whether an answer engine can describe this site is
-whether the content is in the served HTML at all. AI crawlers largely do not
-execute JavaScript, so anything this site builds at runtime is invisible to
-them, no matter what `llms.txt` says.
+La web nueva **no registra ningún service worker**. Pero los navegadores que
+visitaron la web antigua (≤ `v20260905`) tienen uno instalado que servía CSS y
+JS cache-first durante 30 días y el HTML con stale-while-revalidate. Si el
+fichero desapareciera, esos navegadores seguirían sirviendo la web vieja
+indefinidamente.
 
-## Hosting constraints worth remembering
+`public/sw.js` es, por tanto, un kill-switch: al activarse desregistra el
+worker, borra las cachés `svq-triana-*` y recarga las pestañas abiertas. No
+tiene listener de `fetch`, así que no intercepta nada.
 
-GitHub Pages serves static files and **cannot set response headers**. Two
-consequences the repository has already tripped over:
+- **Mantener al menos 6 meses después del corte** (hasta ~mayo de 2027), y
+  mientras Cloudflare Web Analytics siga mostrando visitas de navegadores
+  antiguos.
+- Pasado ese plazo se puede borrar. Antes no.
+- No registrar nunca un service worker desde las páginas: `check:dist` no lo
+  impide explícitamente, pero la CSP y el kill-switch están diseñados para que
+  no exista ninguno nuevo.
 
-- Response headers have to come from the CDN in front of the origin. An
-  `.htaccess` lived here for a year setting a CSP, HSTS and `X-Frame-Options`,
-  and not one line ever took effect — it is an Apache file and Pages does not
-  run Apache. It was deleted on 2026-09-05, once `infra/cloudflare/` was
-  applied and the headers were verified live.
-- Paths are **case-sensitive**, unlike a local macOS or Windows checkout. A file
-  that resolves locally can 404 in production purely on capitalisation.
+## Sobre `llms.txt`
 
-GitHub Pages does serve extensionless URLs: `/nosotros` resolves to
-`nosotros.html`. Both forms return 200, so the site picks the extensionless one
-everywhere (canonical, `og:url`, sitemap, nav) to avoid duplicate content.
-`scripts/serve.py` reproduces that fallback locally; the stock
-`python3 -m http.server` does not, and will report the nav as broken.
+Se mantiene, con expectativas bajas. Es una propuesta
+([llmstxt.org](https://llmstxt.org), finales de 2024) y **no consta que ningún
+crawler de IA importante lo consuma** — ni OpenAI, ni Anthropic, ni Google.
+Cuesta unas líneas y puede servir más adelante.
+
+Lo que de verdad determina si un motor de respuestas puede describir el sitio es
+que el contenido esté en el HTML servido. Los crawlers de IA, en su mayoría, no
+ejecutan JavaScript: por eso la navegación, el pie y todos los datos van en el
+HTML, y el único JS es progresivo.
+
+## Restricciones del hosting que conviene recordar
+
+GitHub Pages sirve ficheros estáticos y **no puede enviar headers de
+respuesta**. Dos consecuencias que ya han mordido:
+
+- Los headers tienen que venir del CDN que está delante. Un `.htaccess` estuvo
+  un año en el repo definiendo CSP, HSTS y `X-Frame-Options`, y no se aplicó ni
+  una línea: es un fichero de Apache y Pages no ejecuta Apache. Se borró el
+  2026-09-05, cuando `infra/cloudflare/` ya estaba aplicado y verificado.
+- Las rutas distinguen **mayúsculas**, al contrario que un checkout local en
+  Windows o macOS. Un fichero que resuelve en local puede dar 404 en producción
+  solo por la caja.
+
+GitHub Pages sirve URLs sin extensión: `/nosotros` resuelve a `nosotros.html`.
+El sitio elige siempre la forma sin extensión (canonical, `og:url`, sitemap,
+nav) para no duplicar contenido. `scripts/serve-dist.mjs` reproduce ese
+comportamiento en local.
