@@ -4,18 +4,20 @@ name: deploy
 # moved, a SHA cannot.
 #
 # Mandatory order at cutover: switch Settings -> Pages -> Source to
-# "GitHub Actions" FIRST. With "Deploy from a branch", merging to main would
-# publish the Astro source and the site would go down.
-
-# DISABLED for now: it only runs by hand (Actions -> deploy -> Run workflow),
-# and the cutover has not been rehearsed yet. `npm run preview:cf` publishes the
-# review preview to Cloudflare Pages meanwhile. To re-enable it at cutover,
-# restore the trigger:
-#   on:
-#     push:
-#       branches: [main]
-#     workflow_dispatch:
+# "GitHub Actions" BEFORE the first Astro commit reaches main. With "Deploy
+# from a branch", the push that lands this file also fires the legacy Jekyll
+# build, which publishes the Astro source and 404s every route. Flipping the
+# source first is what makes this trigger safe; the two are not independent.
+#
+# The flip is not expected to be destructive on its own: changing the source
+# stops the legacy build, and the last successful deployment should keep being
+# served until this workflow publishes. That expectation is unverified here, so
+# check it before merging - `curl -sI https://svqtriana.com/` must still answer
+# 200 and serve the old page after the flip. If it does not, the site is down
+# from the flip until the deploy run finishes, which is minutes, not hours.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
