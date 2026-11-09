@@ -1,5 +1,17 @@
 # Publishing the MVP for review (Cloudflare Pages, free plan)
 
+> **Status: not in use.** On 2026-11-09 it was decided not to build a staging
+> environment at all. The redesign goes straight to production on GitHub Pages,
+> and the review happens against the PR and the checks rather than a preview
+> URL. The reason is host reachability: Cloudflare Pages has been serving IP
+> bans to Spanish ISPs, so a preview on `*.pages.dev` would be invisible to
+> exactly the audience reviewing it, and a preview that the reviewer cannot open
+> is worse than no preview. The Cloudflare zone stays where it is — it still
+> terminates DNS, TLS and Web Analytics in front of GitHub Pages, none of which
+> is affected. This document is kept because it is the only written procedure
+> for a preview, and the constraint that produced the decision could change.
+> See [dns.md](dns.md) for the live topology.
+
 This **is not the cutover to production**. It is a review URL so the DevOps and
 whoever runs the site can see the MVP without touching `svqtriana.com`, its DNS,
 its Cloudflare zone or the production repo's Pages configuration.
