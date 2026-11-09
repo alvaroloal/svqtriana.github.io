@@ -203,6 +203,52 @@ check(
   `${POOL}: two members declare the same pr_agent.model, so the mapping is ambiguous`,
 );
 
+// Role is position in the CI chain, not a preference. Without this the two roles can
+// swap on a re-port — they did, from the SSOT, which orders deepseek first while this
+// repo's TOML must not — and the registry then describes a chain CI never runs.
+const primaryModel = toml.match(/^\s*model\s*=\s*"([^"]+)"/m)?.[1];
+const fallbackBlock = toml.match(/^\s*fallback_models\s*=\s*\[([^\]]*)\]/m)?.[1] ?? '';
+const fallbackModels = [...fallbackBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+const ciMembers = (pool.pool ?? []).filter((member) => member.pr_agent?.model);
+const primaries = ciMembers.filter((member) => member.role === 'primary');
+
+check(
+  primaries.length === 1,
+  `${POOL}: expected exactly one CI member with role="primary", found ${primaries.length}`,
+);
+if (primaries.length === 1) {
+  check(
+    primaries[0].pr_agent.model === primaryModel,
+    `${PR_AGENT_TOML}: model is "${primaryModel}" but ${POOL} marks ` +
+      `"${primaries[0].pr_agent.model}" as primary — the registry and CI disagree about which model leads`,
+  );
+}
+for (const member of ciMembers) {
+  if (member.role === 'primary') continue;
+  check(
+    member.role === 'fallback',
+    `${POOL}: ${member.id} is wired to CI but its role is "${member.role}", not "fallback"`,
+  );
+  check(
+    fallbackModels.includes(member.pr_agent.model),
+    `${PR_AGENT_TOML}: fallback_models omits "${member.pr_agent.model}", which ${POOL} marks as a CI fallback`,
+  );
+}
+for (const model of fallbackModels) {
+  check(
+    ciMembers.some((member) => member.pr_agent.model === model),
+    `${PR_AGENT_TOML}: fallback_models names "${model}", which no ${POOL} member maps to CI`,
+  );
+}
+for (const member of pool.pool ?? []) {
+  if (member.pr_agent?.model) continue;
+  check(
+    member.role === 'member',
+    `${POOL}: ${member.id} has no pr_agent block, so CI never calls it, but its role is ` +
+      `"${member.role}" — only members wired to CI can be primary or fallback`,
+  );
+}
+
 if (failures.length > 0) {
   console.error(`\n${failures.length} failure(s) in the harness:\n`);
   for (const failure of failures) console.error(`- ${failure}`);
