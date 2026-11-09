@@ -16,8 +16,8 @@ import bufanda from '../assets/productos/bufanda.jpg';
 const title = 'PS SVQ Triana | Peña sevillista de Triana, Sevilla';
 const description = `Peña sevillista fundada el 27 de julio de 2019 en el barrio de Triana, Sevilla. Abierta la renovación y las nuevas altas de la temporada ${temporada.etiqueta}.`;
 
-// La miniatura destacada de la galería es la misma que abre /media y el
-// JSON-LD: se cambia en un solo sitio (videos.ts).
+// The gallery's featured thumbnail is the same one /media opens and the one the
+// JSON-LD uses: it changes in a single place (videos.ts).
 const videoDestacado = videos.find((video) => video.destacado) ?? videos[0];
 
 const teasers = [

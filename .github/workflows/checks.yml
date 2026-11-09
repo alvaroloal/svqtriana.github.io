@@ -1,17 +1,18 @@
 name: checks
 
-# Cada comprobación existe por una regresión real del sitio anterior: títulos
-# duplicados, canonical con .html, navegación inyectada por JS, ads.txt con
-# mayúsculas, versión que no coincide con el CHANGELOG, scripts inline
-# bloqueados por la CSP o assets referenciados que no existen.
-
-# DESACTIVADO de momento: solo se ejecuta a mano (Actions -> checks -> Run
-# workflow). Para reactivarlo en cada PR y push a main, devuelve el bloque:
-#   on:
-#     pull_request:
-#     push:
-#       branches: [main]
+# Every check exists because of a real regression in the previous site:
+# duplicate titles, canonicals with .html, navigation injected by JS, ads.txt in
+# uppercase, a version that did not match the CHANGELOG, inline scripts blocked
+# by the CSP, or referenced assets that did not exist.
+#
+# Re-enabled on pull_request and push to main: the checks are the only thing that
+# runs tests on a contribution, and while this was dispatch-only a pull request
+# could merge with nothing but the attested-review gate looking at it (#29).
+# Read-only permissions, so it is safe on a fork PR as well.
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,11 +36,34 @@ jobs:
       - run: npm run build
       - run: npm run check:dist
 
-      - name: Instalar Chromium para Playwright
+      - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Accesibilidad, menú móvil, mapa y rutas
+      - name: Accessibility, mobile menu and routes
         run: npm run test:e2e
+
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      # The harness registries are the contract that pr-agent.yml and
+      # review-attested.yml are graded against. Drift between the JSON and the
+      # workflow YAML is silent at runtime, so it has to fail here.
+      - name: Harness registries agree with the workflows
+        run: node scripts/check-harness.mjs
+
+      - name: Every lesson is indexed
+        run: bash scripts/check-lessons.sh
+
+      - name: Actions are pinned to a commit SHA
+        run: bash scripts/check-actions-pinned.sh
 
   lighthouse:
     runs-on: ubuntu-latest
@@ -71,8 +95,8 @@ jobs:
         with:
           terraform_wrapper: false
 
-      # Sin backend ni credenciales: validate comprueba la configuración, no
-      # habla con Cloudflare. El apply sigue siendo un acto humano.
+      # No backend and no credentials: validate checks the configuration, it
+      # does not talk to Cloudflare. The apply stays a human act.
       - run: terraform fmt -check -recursive
       - run: terraform init -backend=false
       - run: terraform validate

@@ -14,9 +14,10 @@
     "preview:cf": "npm run build && npm run check:dist && node scripts/prepare-preview.mjs && npx --yes wrangler@4 pages deploy dist --project-name svqtriana-mvp --branch mvp",
     "check": "astro check",
     "check:dist": "node scripts/check-dist.mjs",
+    "check:harness": "node scripts/check-harness.mjs",
     "test:e2e": "playwright test",
     "test:lighthouse": "lhci autorun",
-    "verify": "npm run check && npm run build && npm run check:dist && npm run test:e2e",
+    "verify": "npm run check && npm run build && npm run check:dist && npm run check:harness && npm run test:e2e",
     "astro": "astro"
   },
   "dependencies": {

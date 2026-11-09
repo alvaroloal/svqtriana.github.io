@@ -1,82 +1,84 @@
 # svqtriana.com
 
-Web de la **Peña Sevillista SVQ Triana**, peña sevillista fundada el 27 de julio
-de 2019 en el barrio de Triana, Sevilla.
+Website of **PS SVQ Triana**, a Sevilla FC supporters' club founded on 27 July
+2019 in the Triana district of Seville.
 
-Sitio estático generado con **Astro 7** y **Tailwind CSS v4**, publicado en
-GitHub Pages y servido a través de Cloudflare. Sin framework de UI, sin jQuery y
-sin scripts de terceros.
+Static site generated with **Astro 7** and **Tailwind CSS v4**, published on
+GitHub Pages and served through Cloudflare. No UI framework, no jQuery, no
+third-party scripts.
 
-## Puesta en marcha
+## Getting started
 
-Requiere **Node 24 LTS** (Astro 7.4 exige `>=22.23.4`; el proyecto fija 24 en
-`.nvmrc` y en `engines`).
+Requires **Node 24 LTS** (Astro 7.4 requires `>=22.23.4`; the project pins 24 in
+`.nvmrc` and in `engines`).
 
 ```sh
 npm ci
 npm run dev        # http://localhost:4321
 ```
 
-| Comando | Qué hace |
+| Command | What it does |
 |---|---|
-| `npm run dev` | Servidor de desarrollo con recarga. |
-| `npm run build` | Genera `dist/` con las 5 páginas, `404.html`, `sitemap.xml` y `llms.txt`. |
-| `npm run preview` | Sirve `dist/` como lo haría Astro. |
-| `npm run check` | `astro check`: tipos y diagnósticos. |
-| `npm run check:dist` | Invariantes sobre `dist/` (títulos, canonical, JSON-LD, assets, CSP, versión). |
-| `npm run test:e2e` | Playwright: accesibilidad, menú móvil, mapa, rutas y desbordes en móvil. |
-| `npm run test:lighthouse` | Lighthouse CI móvil sobre `dist/`. |
-| `npm run verify` | `check` + `build` + `check:dist` + `test:e2e`. |
+| `npm run dev` | Dev server with reload. |
+| `npm run build` | Emits `dist/` with the 4 pages, `404.html`, `sitemap.xml` and `llms.txt`. |
+| `npm run preview` | Serves `dist/` the way Astro would. |
+| `npm run check` | `astro check`: types and diagnostics. |
+| `npm run check:dist` | Invariants over `dist/` (titles, canonical, JSON-LD, assets, CSP, version). |
+| `npm run check:harness` | The reviewer registries still agree with the workflows they describe. |
+| `npm run test:e2e` | Playwright: accessibility, mobile menu, routes and mobile overflow. |
+| `npm run test:lighthouse` | Mobile Lighthouse CI over `dist/`. |
+| `npm run verify` | `check` + `build` + `check:dist` + `check:harness` + `test:e2e`. |
 
-`npm run preview` (y `scripts/serve-dist.mjs`, que usan las pruebas) resuelven
-`/nosotros` como `nosotros.html`, igual que GitHub Pages.
+`npm run preview` (and `scripts/serve-dist.mjs`, which the tests use) resolve
+`/nosotros` to `nosotros.html`, the same way GitHub Pages does.
 
-## Estructura
+## Layout
 
-| Ruta | Qué es |
+| Path | What it is |
 |---|---|
-| `src/pages/` | Las cinco páginas, `404.astro`, `sitemap.xml.ts` y `llms.txt.ts`. |
-| `src/layouts/BaseLayout.astro` | `<head>` común, cabecera, pie y el único script del sitio. |
-| `src/components/` | Cabecera, navegación móvil, pie, tarjetas, galerías, línea de tiempo y motivos decorativos. |
-| `src/data/` | Todo el contenido literal: web, temporada, productos, vídeos, historia, encuentro, JSON-LD. |
-| `src/assets/` | Maestros de imagen que procesa `astro:assets` (AVIF + WebP). |
-| `src/styles/global.css` | Tokens de Tailwind v4, tipografías y utilidades propias. |
-| `src/scripts/nav.ts` | Menú móvil, galerías de producto y mapa bajo demanda. |
-| `public/` | Ficheros que se sirven tal cual: `CNAME`, `ads.txt`, `robots.txt`, `sw.js`, iconos, fuentes y la imagen OG. |
-| `tests/` | Playwright: `a11y`, `mobile-nav`, `map`, `routes`, `overflow`. |
-| `scripts/` | `check-dist.mjs`, `serve-dist.mjs` y `convert-pulsera.mjs`. |
-| `infra/cloudflare/` | Headers, caché y analítica como Terraform. |
-| `docs/` | Runbooks y lecciones. |
+| `src/pages/` | The four pages, `404.astro`, `sitemap.xml.ts` and `llms.txt.ts`. |
+| `src/layouts/BaseLayout.astro` | Shared `<head>`, header, footer and the site's only script. |
+| `src/components/` | Header, mobile nav, footer, cards, galleries, timeline and decorative motifs. |
+| `src/data/` | All literal content: site, season, products, videos, history, JSON-LD. |
+| `src/assets/` | Image masters processed by `astro:assets` (AVIF + WebP). |
+| `src/styles/global.css` | Tailwind v4 tokens, typefaces and local utilities. |
+| `src/scripts/nav.ts` | Mobile menu and product galleries. |
+| `public/` | Files served as-is: `CNAME`, `ads.txt`, `robots.txt`, `sw.js`, icons, fonts and the OG image. |
+| `tests/` | Playwright: `a11y`, `mobile-nav`, `routes`, `overflow`. |
+| `scripts/` | `check-dist.mjs`, `check-harness.mjs`, `serve-dist.mjs` and `convert-pulsera.mjs`. |
+| `harness/` | Reviewer pool, review-attestation registry and the enforced rules. See [`harness/README.md`](harness/README.md). |
+| `infra/cloudflare/` | Headers, cache and analytics as Terraform. |
+| `docs/` | Runbooks and lessons. |
 
-## El trabajo de temporada
+## The seasonal work
 
-Una vez al año cambia el cartel. Es casi todo el mantenimiento que necesita el
-sitio: [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md).
+Once a year the poster changes. That is almost all the maintenance the site
+needs: [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md).
 
-## Comprobaciones
+## Checks
 
 ```sh
 npm run verify
 terraform -chdir=infra/cloudflare validate
 ```
 
-El CI (`.github/workflows/checks.yml`) ejecuta tipos, build, invariantes de
-`dist/`, Playwright, Lighthouse y `terraform validate`. **Ahora mismo está
-desactivado**, igual que `deploy.yml`: los dos solo se lanzan a mano desde la
-pestaña Actions. Ejecuta `npm run verify` en local antes de publicar. Cómo
-reactivarlos está en el comentario de cada workflow.
-Cada comprobación existe porque algo se rompió de verdad en el sitio anterior.
+CI (`.github/workflows/checks.yml`) runs types, build, `dist/` invariants,
+Playwright, Lighthouse, `terraform validate` and the repository guards
+(`check-harness.mjs`, `check-lessons.sh`, `check-actions-pinned.sh`) on every
+pull request and every push to `main`. `deploy.yml` stays manual: publishing is a
+deliberate act, not a side effect of merging. Every check exists because
+something really did break in the previous site.
 
-`npm audit --omit=dev` sale limpio: lo que se publica son ficheros estáticos,
-sin dependencias en tiempo de ejecución. Los avisos que muestra `npm audit`
-completo viven en la cadena de `@lhci/cli` → `lighthouse` → `puppeteer-core` y
-solo afectan a la máquina que ejecuta las pruebas, no al sitio.
+`npm audit --omit=dev` comes back clean: what gets published is static files,
+with no runtime dependencies. The advisories the full `npm audit` reports live
+in the `@lhci/cli` -> `lighthouse` -> `puppeteer-core` chain and only affect the
+machine running the tests, not the site.
 
-## Compartir el MVP sin tocar producción
+## Sharing the MVP without touching production
 
-Este repositorio **no se ha desplegado**. Para enseñarlo al DevOps y a quien
-administra la web hay una vía aislada en Cloudflare Pages (plan gratis), con
-URL `*.pages.dev`, `noindex` y la CSP real de producción:
+This repository **has not been deployed**. To show it to the DevOps and to
+whoever administers the site there is an isolated path on Cloudflare Pages (free
+plan), with a `*.pages.dev` URL, `noindex` and the real production CSP:
 
 ```sh
 npx --yes wrangler@4 login
@@ -85,51 +87,51 @@ npm ci
 npm run preview:cf
 ```
 
-`npm run preview:cf` construye, comprueba, prepara `dist/` y publica. No hace
-falta un `npm run build` aparte.
+`npm run preview:cf` builds, checks, prepares `dist/` and publishes. No separate
+`npm run build` needed.
 
-Instrucciones completas, alternativa con GitHub y checklist de revisión:
+Full instructions, the GitHub alternative and the review checklist:
 [`docs/runbooks/preview-cloudflare.md`](docs/runbooks/preview-cloudflare.md).
-No cambia DNS, ni la zona de `svqtriana.com`, ni el Pages de producción.
+It changes no DNS, no `svqtriana.com` zone, and nothing in production Pages.
 
-## Trampas
+## Traps
 
-Cosas que parecen errores y no lo son, o que parecen inocuas y no lo son.
+Things that look like mistakes and are not, or that look harmless and are not.
 
-- **`build.format: 'file'` no es un capricho.** Genera `dist/nosotros.html`, que
-  GitHub Pages sirve como `/nosotros` sin barra final. Con el formato por
-  defecto (`directory`) las URLs canónicas y el sitemap acabarían con barra, y
-  el sitio anterior no las tenía.
-- **`sw.js` sigue publicado aunque la web no registre ningún service worker.**
-  Es el kill-switch del worker antiguo: desregistra, borra las cachés
-  `svq-triana-*` y recarga. Debe seguir en la raíz al menos seis meses después
-  del corte. Ver [`docs/root-files.md`](docs/root-files.md).
-- **Nada de `<script>` inline ejecutable.** La CSP de Cloudflare no lleva
-  `'unsafe-inline'`, así que Astro compila a ficheros externos
-  (`inlineStylesheets: 'never'` y `vite.build.assetsInlineLimit: 0`).
-  `check:dist` falla si vuelve a aparecer uno. El JSON-LD sí va inline: es
-  `application/ld+json`, no se ejecuta y la CSP no lo bloquea.
-- **Tampoco `style=""`.** `check:dist` lo prohíbe; por eso `style-src` puede ir
-  sin `'unsafe-inline'`.
-- **El mapa de Google no está en el HTML.** Se inyecta al pulsar «Ver mapa»
-  desde `src/scripts/nav.ts`. La CSP permite el iframe, pero no se pide nada a
-  Google al cargar la página.
-- **Los vídeos son enlaces, no embeds.** Sin iframes de YouTube no hay cookies
-  de terceros ni `frame-src` para youtube.com.
-- **La versión del pie sale de `CHANGELOG.md`.** `version.ts` lee
-  `PUBLIC_SITE_VERSION` (lo fija `deploy.yml`) o, en local, la primera entrada
-  `## vYYYYMMDD`. Si no coinciden, `check:dist` falla.
-- **`compressHTML` está activo por defecto.** No lo desactives para «arreglar»
-  el HTML: cambia el espaciado, no el DOM, y solo hincha el fichero.
-- **Las rutas distinguen mayúsculas en producción.** En Windows/macOS no. Un
-  asset que resuelve en local puede dar 404 en Pages solo por la caja.
-- **Los headers vienen de Cloudflare, no del repo.** GitHub Pages no puede
-  enviarlos. Están en `infra/cloudflare/` y se aplican con Terraform.
+- **`build.format: 'file'` is not a whim.** It emits `dist/nosotros.html`, which
+  GitHub Pages serves as `/nosotros` with no trailing slash. With the default
+  format (`directory`) canonicals and the sitemap would end in a slash, and the
+  previous site did not.
+- **`sw.js` is still published even though the site registers no service
+  worker.** It is the kill-switch for the old one: it unregisters, deletes the
+  `svq-triana-*` caches and reloads. It has to stay at the root for at least six
+  months after the cutover. See [`docs/root-files.md`](docs/root-files.md).
+- **No executable inline `<script>`.** Cloudflare's CSP carries no
+  `'unsafe-inline'`, so Astro compiles to external files
+  (`inlineStylesheets: 'never'` and `vite.build.assetsInlineLimit: 0`).
+  `check:dist` fails if one comes back. JSON-LD is inline on purpose: it is
+  `application/ld+json`, it does not execute, and the CSP does not block it.
+- **No `style=""` either.** `check:dist` forbids it, which is why `style-src`
+  can go without `'unsafe-inline'`.
+- **There are no iframes on any page.** The CSP carries `frame-src 'none'` and
+  `check:dist` fails on an `<iframe>`, so nothing is requested from a third party
+  when the page loads.
+- **Videos are links, not embeds.** No YouTube iframes means no third-party
+  cookies and no `frame-src` for youtube.com.
+- **The footer version comes from `CHANGELOG.md`.** `version.ts` reads the first
+  `## vYYYYMMDD` entry at build time. If it does not match the footer,
+  `check:dist` fails.
+- **`compressHTML` is on by default.** Do not turn it off to "fix" the HTML: it
+  changes whitespace, not the DOM, and only inflates the file.
+- **Paths are case-sensitive in production.** Not on Windows or macOS. An asset
+  that resolves locally can 404 on Pages because of case alone.
+- **Headers come from Cloudflare, not the repo.** GitHub Pages cannot send them.
+  They live in `infra/cloudflare/` and are applied with Terraform.
 
-## Dónde están las decisiones
+## Where the decisions live
 
-- [`docs/root-files.md`](docs/root-files.md) — por qué ciertos ficheros van en `public/` y por qué `sw.js` sigue ahí.
-- [`docs/lessons/_index.md`](docs/lessons/_index.md) — qué falló, el mecanismo y qué lo detecta ahora.
-- [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md) — los trabajos recurrentes.
-- [`infra/cloudflare/README.md`](infra/cloudflare/README.md) — por qué los headers viven en el edge.
-- [`CHANGELOG.md`](CHANGELOG.md) — qué cambia en cada despliegue.
+- [`docs/root-files.md`](docs/root-files.md) — why certain files live in `public/` and why `sw.js` is still there.
+- [`docs/lessons/_index.md`](docs/lessons/_index.md) — what broke, the mechanism, and what catches it now.
+- [`docs/runbooks/maintenance.md`](docs/runbooks/maintenance.md) — the recurring work.
+- [`infra/cloudflare/README.md`](infra/cloudflare/README.md) — why the headers live at the edge.
+- [`CHANGELOG.md`](CHANGELOG.md) — what changes in each deploy.

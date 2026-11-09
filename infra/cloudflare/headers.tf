@@ -13,9 +13,10 @@ locals {
   #     build if an inline script or a style="" attribute reappears.
   #   - the only third-party script is the Cloudflare Web Analytics beacon,
   #     injected by Cloudflare itself.
-  #   - the only iframe is the Google Maps embed on /encuentro, and only after
-  #     the visitor clicks "Ver mapa" (click-to-load). YouTube videos are
-  #     external links, never embeds.
+  #   - no iframes anywhere: the Maps embed lived on the removed /encuentro
+  #     page, and YouTube videos are external links, never embeds. frame-src
+  #     is 'none'. scripts/check-dist.mjs fails the build if an <iframe> or a
+  #     remote script reappears.
   #   - fonts and images are self-hosted; Astro fingerprints them under
   #     /_astro/, so img-src needs no third-party host.
   #   - the membership form is an external docs.google.com link.

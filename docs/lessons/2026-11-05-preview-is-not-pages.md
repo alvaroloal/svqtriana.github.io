@@ -1,25 +1,25 @@
-# La preview de Astro no es GitHub Pages
+# The Astro preview is not GitHub Pages
 
-## Qué pasó
+## What happened
 
-Las primeras pruebas de Playwright arrancaban `astro preview`. Un servidor de
-preview que ya estaba en el puerto 4321 hizo que Playwright reutilizara el
-proceso (`reuseExistingServer`) y probara un `dist/` anterior. Además, la
-preview no resuelve rutas desconocidas igual que Pages: `/404` devolvía 200
-porque el fichero `404.html` existe y se sirve sin extensión, de modo que la
-prueba de "ruta inexistente" pasaba sin probar nada.
+The first Playwright runs started `astro preview`. A preview server already
+sitting on port 4321 made Playwright reuse the process (`reuseExistingServer`)
+and test an older `dist/`. On top of that, the preview does not resolve unknown
+routes the way Pages does: `/404` returned 200 because the `404.html` file
+exists and is served without an extension, so the "nonexistent route" test
+passed without testing anything.
 
-## Mecanismo
+## Mechanism
 
-La preview es un servidor de desarrollo, no el de producción. GitHub Pages
-resuelve `/nosotros` a `nosotros.html` y sirve `404.html` con estado 404 para
-cualquier ruta que no exista; la preview tiene su propia lógica de fallback y de
-estado. Probar contra ella valida el generador, no el hosting.
+The preview is a development server, not the production one. GitHub Pages
+resolves `/nosotros` to `nosotros.html` and serves `404.html` with status 404
+for any route that does not exist; the preview has its own fallback and status
+logic. Testing against it validates the generator, not the hosting.
 
-## Qué lo impide ahora
+## What prevents it now
 
-`scripts/serve-dist.mjs` imita a Pages: extensión opcional, `index.html` para
-directorios, `dist/404.html` con estado 404 y sin redirecciones. Lo usan
-`playwright.config.ts` y `lighthouserc.json`. `tests/routes.spec.ts` prueba
-`/esta-pagina-no-existe`, no `/404`, precisamente para que el estado tenga que
-ser 404 de verdad.
+`scripts/serve-dist.mjs` imitates Pages: optional extension, `index.html` for
+directories, `dist/404.html` with status 404 and no redirects.
+`playwright.config.ts` and `lighthouserc.json` use it. `tests/routes.spec.ts`
+tests `/esta-pagina-no-existe`, not `/404`, precisely so the status has to be a
+real 404.

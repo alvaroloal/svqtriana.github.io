@@ -41,13 +41,23 @@ Alta y renovación por formulario: ${site.formUrl}
 
 ${material}
 
+## Preguntas frecuentes
+
+- ¿Qué es PS SVQ Triana? Una peña sevillista del barrio de Triana, en Sevilla, fundada el 27 de julio de 2019. Reúne a aficionados del Sevilla FC.
+- ¿De qué equipo es? Del Sevilla FC.
+- ¿Dónde está? En Triana, Sevilla (España).
+- ¿Cómo me hago socio? Rellenando el formulario de alta: ${site.formUrl}
+- ¿Cuánto cuesta? Temporada ${temporada.etiquetaLarga}: nueva alta ${temporada.precios.nuevaAlta.base} € (${temporada.precios.nuevaAlta.conCamiseta} € con camiseta); renovación ${temporada.precios.renovacion.base} € (${temporada.precios.renovacion.conCamiseta} € con camiseta).
+- ¿Qué material vende? Bufanda, bandera, pulsera y pegatinas; el precio de cada uno está en el apartado Material.
+- ¿Cómo se contacta? Por correo en ${site.email} o por redes sociales.
+- ¿La web recoge datos personales? No. Es estática, sin backend ni cookies de analítica; el alta se gestiona en un formulario de Google externo.
+
 ## Páginas
 
 - [Inicio](${site.url}/): temporada en curso y alta de socios.
 - [Nuestra historia](${site.url}/nosotros): cómo nació la peña en 2019, el spot 19/20 que se viralizó, los primeros desplazamientos y el sorteo solidario para el Comedor Social de Triana.
 - [Material](${site.url}/productos): bandera, bufanda, pulsera y pegatinas, con precio de socio y de no socio.
 - [Galería](${site.url}/media): spots de cada temporada, el I Pregón de 2019 y vídeos de desplazamientos.
-- [Punto de encuentro](${site.url}/encuentro): Cervecería el Punto de Triana, donde la peña ve los partidos del Sevilla.
 
 ## Notas
 

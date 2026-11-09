@@ -8,12 +8,12 @@ interface Props {
 
 const { hito } = Astro.props;
 const fotos = hito.fotos ?? [];
-// Con una sola foto, en escritorio va al lado del texto; con varias, debajo.
+// With a single photo, it sits next to the text on desktop; with several, below.
 const fotoLateral = fotos.length === 1;
 ---
 
 <li class="relative pl-14 md:grid md:grid-cols-[7rem_minmax(0,1fr)] md:gap-x-16 md:pl-0">
-  <!-- Marca sobre el hilo: un rombo de azulejo. -->
+  <!-- Mark on the thread: an azulejo diamond. -->
   <span
     class="absolute left-0 top-0 grid h-[2.4rem] w-[2.4rem] rotate-45 place-items-center rounded-[3px] border-2 border-sevilla-500 bg-cal-50 md:left-[7.5rem]"
     aria-hidden="true"

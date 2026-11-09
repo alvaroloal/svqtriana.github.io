@@ -1,122 +1,122 @@
-# Publicar el MVP para revisión (Cloudflare Pages, plan gratis)
+# Publishing the MVP for review (Cloudflare Pages, free plan)
 
-Esto **no es el corte a producción**. Es una URL de revisión para que el DevOps
-y quien administra la web vean el MVP sin tocar `svqtriana.com`, su DNS, su zona
-de Cloudflare ni la configuración de Pages del repo de producción.
+This **is not the cutover to production**. It is a review URL so the DevOps and
+whoever runs the site can see the MVP without touching `svqtriana.com`, its DNS,
+its Cloudflare zone or the production repo's Pages configuration.
 
-| Sí | No |
+| Yes | No |
 |---|---|
-| Un proyecto **aparte** de Cloudflare Pages (`svqtriana-mvp`) | Cambiar DNS o la zona de `svqtriana.com` |
-| URL `*.pages.dev` | Añadir `mvp.svqtriana.com` (eso sí toca la zona) |
-| `noindex` y `Disallow /` en la vista previa | `terraform apply` |
-| Borrar el proyecto cuando acabe la revisión | Cambiar Settings → Pages del repo de producción |
+| A **separate** Cloudflare Pages project (`svqtriana-mvp`) | Changing DNS or the `svqtriana.com` zone |
+| A `*.pages.dev` URL | Adding `mvp.svqtriana.com` (that does touch the zone) |
+| `noindex` and `Disallow /` on the preview | `terraform apply` |
+| Deleting the project when the review is over | Changing Settings → Pages on the production repo |
 
-## Opción A (recomendada): subida directa, sin conectar el repo
+## Option A (recommended): direct upload, no repo connection
 
-La más rápida y la que menos permisos pide: no hay que dar a Cloudflare acceso
-al repositorio, no se ejecuta nada de GitHub y cada subida es un snapshot
-inmutable de `dist/`.
+The fastest one, and the one that asks for the fewest permissions: Cloudflare
+gets no access to the repository, nothing runs on GitHub, and every upload is an
+immutable snapshot of `dist/`.
 
-### 1. Requisitos
+### 1. Requirements
 
-- Node 24 y el repo en local.
-- Una cuenta de Cloudflare gratuita.
-- `git` (opcional, solo para el `X-Preview-Commit`).
+- Node 24 and the repo locally.
+- A free Cloudflare account.
+- `git` (optional, only for `X-Preview-Commit`).
 
-### 2. Autenticarse
+### 2. Authenticate
 
 ```sh
 npx --yes wrangler@4 login
 ```
 
-Abre el navegador y crea un token OAuth para **tu** usuario. No reutilices el
-token de Terraform de producción: para la vista previa basta con OAuth o con un
-token limitado a `Account → Cloudflare Pages → Edit`.
+It opens the browser and creates an OAuth token for **your** user. Do not reuse
+the production Terraform token: for the preview an OAuth login is enough, or a
+token limited to `Account → Cloudflare Pages → Edit`.
 
-Si la cuenta tiene varios accounts, exporta el correcto:
+If the account has several accounts, export the right one:
 
 ```sh
 # PowerShell
 $env:CLOUDFLARE_ACCOUNT_ID = "<account_id>"
 ```
 
-### 3. Crear el proyecto una sola vez
+### 3. Create the project once
 
 ```sh
 npx --yes wrangler@4 pages project create svqtriana-mvp --production-branch mvp
 ```
 
-### 4. Construir y publicar
+### 4. Build and publish
 
 ```sh
 npm ci
 npm run preview:cf
 ```
 
-`preview:cf` hace cuatro cosas, en este orden:
+`preview:cf` does four things, in this order:
 
-1. `npm run build` regenera `dist/`.
-2. `npm run check:dist` verifica los invariantes antes de publicar nada.
-3. `scripts/prepare-preview.mjs` prepara `dist/`:
-   - escribe `_headers` con la **misma CSP** que
-     `infra/cloudflare/csp.txt` (la que se aplicará en producción), más
-     `X-Robots-Tag: noindex, nofollow`, `X-Frame-Options`, `nosniff` y caché
-     inmutable para `/_astro/*`;
-   - reescribe `robots.txt` con `Disallow: /` para que ningún crawler siga el
-     sitemap de producción desde una URL de revisión;
-   - elimina `CNAME`, que solo entiende GitHub Pages.
-4. `wrangler pages deploy dist` sube el resultado.
+1. `npm run build` regenerates `dist/`.
+2. `npm run check:dist` checks the invariants before publishing anything.
+3. `scripts/prepare-preview.mjs` prepares `dist/`:
+   - it writes `_headers` with the **same CSP** as
+     `infra/cloudflare/csp.txt` (the one that will apply in production), plus
+     `X-Robots-Tag: noindex, nofollow`, `X-Frame-Options`, `nosniff` and
+     immutable caching for `/_astro/*`;
+   - it rewrites `robots.txt` with `Disallow: /` so no crawler follows the
+     production sitemap from a review URL;
+   - it removes `CNAME`, which only GitHub Pages understands.
+4. `wrangler pages deploy dist` uploads the result.
 
-La salida imprime dos URLs:
+The output prints two URLs:
 
 ```
-https://svqtriana-mvp.pages.dev                 # rama mvp (estable)
-https://<hash>.svqtriana-mvp.pages.dev          # este deploy concreto
+https://svqtriana-mvp.pages.dev                 # the mvp branch (stable)
+https://<hash>.svqtriana-mvp.pages.dev          # this specific deploy
 ```
 
-Comparte la primera con el DevOps; la segunda es útil para señalar una versión
-exacta en una revisión.
+Share the first one with the DevOps; the second is useful to point at an exact
+version in a review.
 
-### 5. Iterar
+### 5. Iterate
 
 ```sh
 npm run preview:cf
 ```
 
-**`npm run build` por sí solo no publica**: solo regenera `dist/` en local. La
-web de `*.pages.dev` cambia cuando se ejecuta `preview:cf`, que vuelve a
-construir y sube un deployment nuevo. La URL estable
-(`https://svqtriana-mvp.pages.dev`) sigue siendo la misma y sirve la última
-subida; las URLs con hash de cada deployment anterior se conservan.
+**`npm run build` on its own does not publish**: it only regenerates `dist/`
+locally. The `*.pages.dev` site changes when `preview:cf` runs, which rebuilds
+and uploads a new deployment. The stable URL
+(`https://svqtriana-mvp.pages.dev`) stays the same and serves the latest upload;
+the hashed URLs of each previous deployment are kept.
 
-Si el navegador te enseña una versión vieja, fuerza recarga (Ctrl+F5). El HTML
-se sirve sin caché larga y los assets llevan hash, así que no debería hacer
-falta.
+If the browser shows you an old version, force a reload (Ctrl+F5). The HTML is
+served without long caching and the assets carry a hash, so it should not be
+needed.
 
-## Opción B (mejor para iterar en equipo): GitHub + Pages
+## Option B (better for iterating as a team): GitHub + Pages
 
-Si el DevOps prefiere revisar por PR:
+If the DevOps prefers to review by PR:
 
-1. Subir el repo a un repositorio **privado** (o a un fork/mirror dedicado).
+1. Push the repo to a **private** repository (or to a dedicated fork/mirror).
 2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git.
 3. Build command: `npm run build`. Output directory: `dist`.
-4. Variable de entorno: `NODE_VERSION=24` (o `24.22.2`).
-5. Cada push a una rama y cada PR generan una preview
+4. Environment variable: `NODE_VERSION=24` (or `24.22.2`).
+5. Every push to a branch and every PR generate a preview at
    `<hash>.svqtriana-mvp.pages.dev`.
 
-No hacen falta secretos: Pages construye desde el repo y lee `CHANGELOG.md`
-para la versión del pie. Conectar un proyecto de Pages **no** modifica el repo
-ni el Pages de producción; aun así, si se quiere separación estricta, conectar
-un fork y no el repo que administra la web.
+No secrets are needed: Pages builds from the repo and reads `CHANGELOG.md` for
+the footer version. Connecting a Pages project does **not** change the repo or
+the production Pages project; even so, if strict separation is wanted, connect a
+fork and not the repo that runs the site.
 
-> Ojo: en esta opción el `_headers` de `prepare-preview.mjs` no se ejecuta,
-> porque el build de Pages solo corre `npm run build`. Si quieres la CSP y el
-> `noindex` también por esta vía, cambia el build command a
+> Careful: in this option the `_headers` from `prepare-preview.mjs` does not run,
+> because the Pages build only runs `npm run build`. If you want the CSP and the
+> `noindex` through this path too, change the build command to
 > `npm run build && node scripts/prepare-preview.mjs`.
 
-## Opción C: demo en vivo de 10 minutos
+## Option C: 10-minute live demo
 
-Para una llamada, sin cuenta ni proyecto:
+For a call, with no account and no project:
 
 ```sh
 npm run build
@@ -124,84 +124,84 @@ node scripts/serve-dist.mjs 4321        # terminal 1
 cloudflared tunnel --url http://localhost:4321   # terminal 2
 ```
 
-`cloudflared` se instala aparte (`winget install Cloudflare.cloudflared` o
-desde <https://github.com/cloudflare/cloudflared/releases>). La URL
-`*.trycloudflare.com` es efímera y cambia en cada arranque. No sirve para
-compartir de forma duradera.
+`cloudflared` is installed separately (`winget install Cloudflare.cloudflared`
+or from <https://github.com/cloudflare/cloudflared/releases>). The
+`*.trycloudflare.com` URL is ephemeral and changes on every start. It is not
+usable for durable sharing.
 
-## Proteger la vista previa (opcional, gratis)
+## Protecting the preview (optional, free)
 
-Si no quieres que el MVP sea público:
+If you do not want the MVP to be public:
 
 1. Cloudflare Dashboard → Zero Trust → Access → Applications → Add an
    application → Self-hosted.
-2. Application domain: `svqtriana-mvp.pages.dev` (y `*.<proyecto>.pages.dev` si
-   quieres cubrir también las previews con hash).
-3. Policy: `Emails` con las direcciones de quien vaya a revisar, y login por
-   **One-time PIN** (no hace falta configurar un IdP).
+2. Application domain: `svqtriana-mvp.pages.dev` (and `*.<proyecto>.pages.dev`
+   if you want to cover the hashed previews too).
+3. Policy: `Emails` with the addresses of whoever is going to review, and
+   **One-time PIN** login (no IdP to configure).
 
-El plan Free de Zero Trust cubre hasta **50 usuarios**. El alta puede pedir
-datos de pago para verificar la cuenta, pero el plan Free no cobra.
+The Zero Trust Free plan covers up to **50 users**. Sign-up may ask for payment
+details to verify the account, but the Free plan does not charge.
 
-## Límites del plan gratis (consultados 2026-11)
+## Free plan limits (checked 2026-11)
 
-| Límite | Free |
+| Limit | Free |
 |---|---|
-| Peticiones y ancho de banda de estáticos | Ilimitados |
-| Builds | 500/mes, 1 concurrente, 20 min por build |
-| Ficheros por sitio | 20 000 |
-| Tamaño por fichero | 25 MiB |
-| Dominios custom por proyecto | 100 |
-| Reglas en `_headers` | 100 |
-| Usuarios de Access | 50 |
+| Static requests and bandwidth | Unlimited |
+| Builds | 500/month, 1 concurrent, 20 min per build |
+| Files per site | 20 000 |
+| Size per file | 25 MiB |
+| Custom domains per project | 100 |
+| Rules in `_headers` | 100 |
+| Access users | 50 |
 
-El sitio tiene 6 HTML y unos pocos cientos de assets: sobra con muchísimo
-margen.
+The site has 6 HTML files and a few hundred assets: that leaves a very wide
+margin.
 
-## Limpiar
+## Cleaning up
 
 ```sh
 npx --yes wrangler@4 pages project delete svqtriana-mvp
 ```
 
-Y borra la aplicación de Access si la creaste. No hay ningún registro DNS que
-deshacer: **no se ha tocado la zona de `svqtriana.com`**.
+And delete the Access application if you created it. There is no DNS record to
+undo: **the `svqtriana.com` zone has not been touched**.
 
-## Qué revisar (checklist para el DevOps)
+## What to review (DevOps checklist)
 
 ```sh
 npm ci
-npm run verify                              # tipos, build, invariantes, Playwright
+npm run verify                              # types, build, invariants, Playwright
 npm run build && npm run check:dist
 terraform -chdir=infra/cloudflare fmt -check -recursive
 terraform -chdir=infra/cloudflare init -backend=false
 terraform -chdir=infra/cloudflare validate
 ```
 
-En la URL del MVP:
+On the MVP URL:
 
-- [ ] `/`, `/nosotros`, `/productos`, `/media`, `/encuentro` responden 200 sin
-      `.html` y sin barra final.
-- [ ] `/robots.txt`, `/sitemap.xml`, `/ads.txt`, `/llms.txt`, `/sw.js` responden
-      200; una ruta inexistente devuelve 404 con la página de error.
-- [ ] Canonical, `og:url` y sitemap coinciden y no llevan `.html` ni barra final.
-- [ ] `/encuentro` es indexable en producción y el mapa **no** carga hasta
-      pulsar «Ver mapa».
-- [ ] Los vídeos son enlaces a YouTube; no hay iframes de YouTube.
-- [ ] Menú móvil a 375 px, cierre con Escape y con clic fuera.
-- [ ] Consola sin `Refused to load` (la CSP de la preview es la de producción).
-- [ ] Cabeceras: `curl -sI https://svqtriana-mvp.pages.dev/ | grep -iE 'content-security-policy|x-robots-tag|x-frame-options'`.
-- [ ] Lighthouse móvil dentro de los umbrales de `lighthouserc.json`.
-- [ ] Decisiones de producto en `MIGRACION-ASTRO.md` §18: `/encuentro` pública,
-      link-out a vídeos, mapa click-to-load, sin anuncios visibles, Fraunces.
+- [ ] `/`, `/nosotros`, `/productos` and `/media` return 200 with no `.html`
+      and no trailing slash.
+- [ ] `/robots.txt`, `/sitemap.xml`, `/ads.txt`, `/llms.txt`, `/sw.js` return
+      200; a nonexistent route returns 404 with the error page.
+- [ ] Canonical, `og:url` and sitemap agree and carry no `.html` and no trailing
+      slash.
+- [ ] `/encuentro` returns 404: the route was removed with the redesign.
+- [ ] The videos are YouTube links; there are no YouTube iframes.
+- [ ] Mobile menu at 375 px, closes with Escape and with a click outside.
+- [ ] Console free of `Refused to load` (the preview CSP is the production one).
+- [ ] Headers: `curl -sI https://svqtriana-mvp.pages.dev/ | grep -iE 'content-security-policy|x-robots-tag|x-frame-options'`.
+- [ ] Mobile Lighthouse within the thresholds in `lighthouserc.json`.
+- [ ] Product decisions closed: link-out to videos instead of iframes, no
+      visible ads, Fraunces as display.
 
-## Qué NO demuestra la preview
+## What the preview does NOT prove
 
-- **Cloudflare Web Analytics**: el beacon lo inyecta la zona de producción, no
-  un proyecto de Pages. Su ausencia en la preview es esperada.
-- **Cabeceras de la zona**: las aplica `infra/cloudflare/headers.tf`, no
-  `_headers`. La preview usa una copia generada desde el mismo `csp.txt`; el
-  resto de headers de zona solo se verifican tras el `apply` (F7).
-- **Comportamiento de GitHub Pages**: la preview sirve desde Pages; el fallback
-  de rutas es el mismo que prueba `scripts/serve-dist.mjs`, pero el hosting real
-  de producción seguirá siendo GitHub Pages hasta el corte.
+- **Cloudflare Web Analytics**: the beacon is injected by the production zone,
+  not by a Pages project. Its absence in the preview is expected.
+- **Zone headers**: they are applied by `infra/cloudflare/headers.tf`, not by
+  `_headers`. The preview uses a copy generated from the same `csp.txt`; the
+  rest of the zone headers are only verified after `apply` (F7).
+- **GitHub Pages behaviour**: the preview serves from Pages; the route fallback
+  is the same one `scripts/serve-dist.mjs` exercises, but the real production
+  host stays GitHub Pages until the cutover.

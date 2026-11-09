@@ -1,16 +1,16 @@
 ---
 interface Props {
   class?: string;
-  /** Escala del tramo (1 = 64 px de alto). La clase debe fijar la altura a juego. */
+  /** Span scale (1 = 64 px tall). The class must set the height to match. */
   scale?: number;
 }
 
 const { class: className = '', scale = 1 } = Astro.props;
 
-// Tramo del Puente de Isabel II: un arco rebajado entre dos pilas, el tablero
-// encima y los aros en las enjutas, cada vez más pequeños hacia la clave.
-// Se dibuja como patrón en unidades de usuario, así se repite sin deformarse
-// a cualquier ancho (un viewBox con preserveAspectRatio="none" aplastaba los aros).
+// A span of the Puente de Isabel II: a shallow arch between two piers, the deck
+// above and the rings in the spandrels, each smaller towards the keystone.
+// Drawn as a pattern in user units, so it repeats without distorting at any
+// width (a viewBox with preserveAspectRatio="none" flattened the rings).
 const W = 180;
 const H = 64;
 const DECK = 17;
@@ -26,7 +26,7 @@ const half: Ring[] = [];
 let x0 = 3;
 while (x0 < W / 2) {
   let r = 12;
-  // El aro cabe si el arco, en su borde más cercano a la clave, queda por debajo.
+  // The ring fits if the arch, at its edge closest to the keystone, stays below.
   while (r >= 1.6 && archY(Math.min(x0 + 2 * r, W / 2)) - DECK - 1.2 < 2 * r) r -= 0.2;
   if (r < 1.6 || x0 + 2 * r > W / 2) break;
   half.push({ cx: x0 + r, cy: DECK + 0.6 + r, r });
@@ -52,11 +52,11 @@ const id = `puente-${++instances}-${Math.random().toString(36).slice(2, 7)}`;
       patternTransform={scale !== 1 ? `scale(${scale})` : undefined}
     >
       <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-        <!-- Barandilla y tablero. -->
+        <!-- Railing and deck. -->
         <path d={`M0 ${DECK - 5}H${W}M0 ${DECK}H${W}`} />
-        <!-- Farolas sobre las pilas. -->
+        <!-- Lamps on the piers. -->
         <path d={`M0 ${DECK - 5}V3M${W} ${DECK - 5}V3`} />
-        <!-- Arco: trasdós e intradós. -->
+        <!-- Arch: extrados and intrados. -->
         <path d={`M0 ${H}Q${W / 2} ${CONTROL_Y} ${W} ${H}`} />
         <path d={`M9 ${H}Q${W / 2} ${CONTROL_Y + 12} ${W - 9} ${H}`} stroke-opacity="0.6" />
         {rings.map((ring) => <circle cx={ring.cx} cy={ring.cy} r={ring.r} />)}
@@ -64,7 +64,7 @@ const id = `puente-${++instances}-${Math.random().toString(36).slice(2, 7)}`;
       <g fill="currentColor">
         <circle cx="0" cy="3" r="2.2" />
         <circle cx={W} cy="3" r="2.2" />
-        <!-- Pilas. -->
+        <!-- Piers. -->
         <rect x="0" y={H - 14} width="5" height="14" />
         <rect x={W - 5} y={H - 14} width="5" height="14" />
       </g>

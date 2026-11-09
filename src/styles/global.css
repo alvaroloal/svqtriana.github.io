@@ -56,7 +56,7 @@
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
 
-  /* Antetítulo con la raya del albero delante. */
+  /* Kicker with the albero line in front. */
   .kicker {
     @apply inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em];
   }
@@ -77,7 +77,7 @@
     );
   }
 
-  /* Foto de álbum: marco blanco y una inclinación mínima. */
+  /* Album photo: white frame and a slight tilt. */
   .polaroid {
     @apply bg-white p-2 pb-3 shadow-[0_10px_30px_-12px_rgb(26_20_20/0.45)] ring-1 ring-noche-950/5 transition-transform duration-300 sm:p-3 sm:pb-4;
   }
@@ -91,7 +91,7 @@
     rotate: 0deg;
   }
 
-  /* Enlace de navegación con subrayado que crece. */
+  /* Nav link with an underline that grows. */
   .nav-link {
     @apply relative py-2 text-xs font-bold uppercase tracking-[0.16em] text-cal-50 transition-colors hover:text-albero-400;
   }
@@ -115,7 +115,7 @@
   }
 }
 
-/* Transiciones entre páginas sin JS (cross-document view transitions). */
+/* Cross-page transitions with no JS (cross-document view transitions). */
 @view-transition {
   navigation: auto;
 }

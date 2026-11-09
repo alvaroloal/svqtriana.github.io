@@ -1,25 +1,25 @@
-# Un fallback más pesado que el original
+# A fallback heavier than the original
 
-## Qué pasó
+## What happened
 
-La pulsera solo tenía un maestro WebP de 386 px. `astro:assets` con
-`<Picture formats={['avif', 'webp']}>` usa el formato del fichero de origen
-como fallback para navegadores sin AVIF ni WebP, así que el fallback se generó
-como PNG: 275 kB para una imagen de 21 kB. El navegador que no soportaba AVIF
-ni WebP descargaba trece veces más de lo necesario, y Lighthouse lo notó.
+The wristband only had a 386 px WebP master. `astro:assets` with
+`<Picture formats={['avif', 'webp']}>` uses the source file's format as the
+fallback for browsers without AVIF or WebP, so the fallback was generated as
+PNG: 275 kB for a 21 kB image. A browser that supported neither AVIF nor WebP
+downloaded thirteen times more than necessary, and Lighthouse noticed.
 
-## Mecanismo
+## Mechanism
 
-`<Picture>` no elige el fallback por tamaño sino por formato: deriva del
-`ImageMetadata` del import. Un maestro WebP obliga al fallback a PNG. La
-solución no es tocar el componente sino convertir el maestro a JPEG, que
-cualquier navegador entiende y que `sharp` comprime bien.
+`<Picture>` does not choose the fallback by size but by format: it derives it
+from the import's `ImageMetadata`. A WebP master forces the fallback to PNG. The
+fix is not to touch the component but to convert the master to JPEG, which every
+browser understands and which `sharp` compresses well.
 
-## Qué lo impide ahora
+## What prevents it now
 
-- `src/assets/productos/pulsera.jpg` es el import que usa `productos.ts`;
-  `scripts/convert-pulsera.mjs` documenta de dónde salió.
-- `scripts/check-dist.mjs` falla si aparece **cualquier** PNG en `dist/_astro/`.
-  Todos los maestros del sitio son JPEG o WebP, así que un PNG solo puede venir
-  de este fallback. Un presupuesto genérico de kB no habría servido: el cartel
-  y varias pegatinas pesan más de 250 kB legítimamente.
+- `src/assets/productos/pulsera.jpg` is the import `productos.ts` uses;
+  `scripts/convert-pulsera.mjs` documents where it came from.
+- `scripts/check-dist.mjs` fails if **any** PNG appears in `dist/_astro/`. Every
+  master in the site is JPEG or WebP, so a PNG can only come from this fallback.
+  A generic kB budget would not have worked: the poster and several stickers
+  legitimately weigh more than 250 kB.

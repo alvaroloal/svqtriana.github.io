@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Servidor estático mínimo que imita a GitHub Pages para las pruebas:
- * - `/nosotros` sirve `dist/nosotros.html` con 200;
- * - una ruta desconocida sirve `dist/404.html` con 404;
- * - no hay redirecciones ni barra final.
+ * Minimal static server that imitates GitHub Pages for the tests:
+ * - `/nosotros` serves `dist/nosotros.html` with a 200;
+ * - an unknown route serves `dist/404.html` with a 404;
+ * - no redirects and no trailing slash.
  *
- * Uso: node scripts/serve-dist.mjs [puerto]
+ * Usage: node scripts/serve-dist.mjs [port]
  */
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
@@ -80,5 +80,5 @@ const server = createServer((request, response) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`dist en http://localhost:${PORT}/`);
+  console.log(`serving dist on http://localhost:${PORT}/`);
 });

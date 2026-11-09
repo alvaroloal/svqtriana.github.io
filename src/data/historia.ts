@@ -7,9 +7,9 @@ import comida19 from '../assets/historia/comida19.jpg';
 export type HistoriaPhoto = { src: ImageMetadata; alt: string };
 
 export type Hito = {
-  /** Solo cuando el texto legado da una fecha explícita para el bloque. */
+  /** Only when the legacy text gives an explicit date for the block. */
   fecha?: string;
-  /** Párrafos literales del HTML legado, con el énfasis original. */
+  /** Verbatim paragraphs from the legacy HTML, with the original emphasis. */
   parrafos: string[];
   fotos?: HistoriaPhoto[];
 };

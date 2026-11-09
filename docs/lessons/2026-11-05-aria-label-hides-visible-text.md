@@ -1,25 +1,26 @@
-# Un `aria-label` sustituye al texto visible, no lo completa
+# An `aria-label` replaces the visible text, it does not complete it
 
-## Qué pasó
+## What happened
 
-Los enlaces sociales del pie tenían `aria-label="Contactar por Instagram"` y el
-texto visible `@PS_SVQTRIANA`. Axe marcó `label-content-name-mismatch`: el
-nombre accesible no contiene el texto que se ve. Un usuario de control por voz
-que diga «pulsa @PS_SVQTRIANA» no activa el enlace, porque el nombre que expone
-el navegador es otro. Pasaba igual en la tarjeta de producto y en los vídeos.
+The footer social links had `aria-label="Contactar por Instagram"` and the
+visible text `@PS_SVQTRIANA`. Axe flagged `label-content-name-mismatch`: the
+accessible name does not contain the visible text. A voice-control user saying
+"pulsa @PS_SVQTRIANA" does not activate the link, because the name the browser
+exposes is a different one. The same happened on the product card and on the
+videos.
 
-## Mecanismo
+## Mechanism
 
-El nombre accesible se calcula con precedencia: `aria-label` gana al contenido.
-No es que se sumen; el `aria-label` lo reemplaza. WCAG 2.5.3 (Label in Name)
-exige que el texto visible esté contenido en el nombre accesible, así que un
-`aria-label` más «limpio» pero distinto es un fallo, no una mejora.
+The accessible name is computed by precedence: `aria-label` wins over the
+content. They are not summed; the `aria-label` replaces it. WCAG 2.5.3 (Label in
+Name) requires the visible text to be contained in the accessible name, so a
+"cleaner" but different `aria-label` is a defect, not an improvement.
 
-## Qué lo impide ahora
+## What prevents it now
 
-Los `aria-label` incluyen el texto visible
+The `aria-label`s include the visible text
 (`Contactar por Instagram: @PS_SVQTRIANA`, `Pídelo: <producto> por Instagram…`)
-y el sufijo de pestaña nueva va en un `<span class="sr-only">`, no en un
-`aria-label` que oculte el resto. `tests/a11y.spec.ts` ejecuta axe con las
-etiquetas WCAG 2.0/2.1 A y AA en las cinco páginas y falla con cualquier
-violación `serious` o `critical`.
+and the new-tab suffix goes in a `<span class="sr-only">`, not in an
+`aria-label` that hides the rest. `tests/a11y.spec.ts` runs axe with the WCAG
+2.0/2.1 A and AA tags on all five pages and fails on any `serious` or `critical`
+violation.

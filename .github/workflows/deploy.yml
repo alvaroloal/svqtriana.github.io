@@ -1,16 +1,16 @@
 name: deploy
 
-# Publica dist/ en GitHub Pages. Todas las actions van fijadas por SHA: una tag
-# se puede mover, un SHA no.
+# Publishes dist/ to GitHub Pages. Every action is pinned by SHA: a tag can be
+# moved, a SHA cannot.
 #
-# Orden obligatorio en el corte (MIGRACION-ASTRO.md §15): cambiar antes
-# Settings -> Pages -> Source a "GitHub Actions". Con "Deploy from a branch",
-# el merge a main publicaría el código fuente de Astro y la web se caería.
+# Mandatory order at cutover: switch Settings -> Pages -> Source to
+# "GitHub Actions" FIRST. With "Deploy from a branch", merging to main would
+# publish the Astro source and the site would go down.
 
-# DESACTIVADO de momento: la vista previa se publica con `npm run preview:cf`
-# (Cloudflare Pages) y este repo no publica en GitHub Pages. Solo se ejecuta a
-# mano (Actions -> deploy -> Run workflow). Para reactivarlo en el corte,
-# devuelve el disparador:
+# DISABLED for now: it only runs by hand (Actions -> deploy -> Run workflow),
+# and the cutover has not been rehearsed yet. `npm run preview:cf` publishes the
+# review preview to Cloudflare Pages meanwhile. To re-enable it at cutover,
+# restore the trigger:
 #   on:
 #     push:
 #       branches: [main]
@@ -39,14 +39,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-
-      # El footer y el CHANGELOG comparten la misma cadena: la primera entrada
-      # `## vYYYYMMDD` del CHANGELOG es la versión de este despliegue.
-      - name: Versión del sitio = primera entrada de CHANGELOG.md
-        run: |
-          v=$(grep -m1 -oE '^## v[0-9]{8}(\.[0-9]+)?' CHANGELOG.md | cut -c4-)
-          test -n "$v" || { echo "CHANGELOG.md sin entrada de versión"; exit 1; }
-          echo "PUBLIC_SITE_VERSION=$v" >> "$GITHUB_ENV"
 
       - run: npm ci
       - run: npm run check

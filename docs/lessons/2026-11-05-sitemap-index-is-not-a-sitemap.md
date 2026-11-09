@@ -1,23 +1,23 @@
-# El sitemap de Astro es un índice, no un sitemap
+# Astro's sitemap is an index, not a sitemap
 
-## Qué pasó
+## What happened
 
-Se instaló `@astrojs/sitemap` esperando obtener `dist/sitemap.xml`, que es la
-URL que anuncian `robots.txt` y Google Search Console desde hace años. La
-integración genera `sitemap-index.xml` y `sitemap-0.xml`. El build era correcto
-y el fichero existía, pero en otra ruta: `/sitemap.xml` habría devuelto 404 en
-producción.
+`@astrojs/sitemap` was installed expecting to get `dist/sitemap.xml`, which is
+the URL `robots.txt` and Google Search Console have advertised for years. The
+integration generates `sitemap-index.xml` and `sitemap-0.xml`. The build was
+correct and the file existed, but at another path: `/sitemap.xml` would have
+returned 404 in production.
 
-## Mecanismo
+## Mechanism
 
-La integración asume el formato de índice de sitemaps para poder paginar cuando
-hay más de 50 000 URLs o varios sitemaps. En un sitio de cinco páginas el índice
-es una indirección innecesaria, y cambiar la URL publicada habría roto la
-referencia de `robots.txt` y el envío ya hecho a Search Console.
+The integration assumes the sitemap index format so it can paginate when there
+are more than 50 000 URLs or several sitemaps. On a five-page site the index is
+an unnecessary indirection, and changing the published URL would have broken the
+`robots.txt` reference and the submission already made to Search Console.
 
-## Qué lo impide ahora
+## What prevents it now
 
-`src/pages/sitemap.xml.ts` genera el sitemap directamente, con las cinco URLs
-sin barra final y su `lastmod`. `scripts/check-dist.mjs` comprueba que
-`dist/sitemap.xml` existe, que tiene exactamente esas cinco `<loc>` y cinco
-`<lastmod>`, y `tests/routes.spec.ts` que responde 200.
+`src/pages/sitemap.xml.ts` generates the sitemap directly, with the five URLs
+without a trailing slash and their `lastmod`. `scripts/check-dist.mjs` checks
+that `dist/sitemap.xml` exists, that it has exactly those five `<loc>` and five
+`<lastmod>`, and `tests/routes.spec.ts` that it returns 200.

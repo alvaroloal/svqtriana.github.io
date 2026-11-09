@@ -6,11 +6,10 @@ const PAGES = [
   { path: '/nosotros', heading: '¿QUIÉNES SOMOS?' },
   { path: '/productos', heading: 'MATERIAL' },
   { path: '/media', heading: 'GALERÍA' },
-  { path: '/encuentro', heading: 'Ven con nosotros a ver el Sevilla' },
 ];
 
 for (const pageUnderTest of PAGES) {
-  test(`${pageUnderTest.path} no tiene violaciones graves de accesibilidad`, async ({ page }) => {
+  test(`${pageUnderTest.path} has no serious accessibility violations`, async ({ page }) => {
     await page.goto(pageUnderTest.path);
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText(pageUnderTest.heading);
@@ -25,7 +24,7 @@ for (const pageUnderTest of PAGES) {
 
     expect(
       serious,
-      `Violaciones graves en ${pageUnderTest.path}:\n${JSON.stringify(serious, null, 2)}`,
+      `Serious violations on ${pageUnderTest.path}:\n${JSON.stringify(serious, null, 2)}`,
     ).toEqual([]);
   });
 }

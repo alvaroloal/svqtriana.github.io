@@ -19,9 +19,9 @@ import { temporada } from '../data/temporada';
     class="site-container grid grid-cols-[minmax(0,1fr)] items-center gap-12 pb-10 pt-12 sm:pt-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:pb-14 lg:pt-20"
   >
     <!--
-      Móvil: contenedor de consulta, el título se mide por el ancho de la columna
-      y nunca se sale. Escritorio: sin contención, la columna toma el ancho del
-      título (7rem en pantallas grandes), igual que en el diseño original.
+      Mobile: a query container, the title is measured against the column width
+      and never overflows. Desktop: no containment, the column takes the title's
+      width (7rem on large screens), as in the original design.
     -->
     <div class="@container min-w-0 lg:min-w-auto lg:[container-type:normal]">
       <p class="kicker text-albero-400">Peña Sevillista · Triana · Desde 2019</p>
@@ -43,7 +43,7 @@ import { temporada } from '../data/temporada';
     </div>
 
     <div class="relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-[26rem]">
-      <!-- Marco de azulejo desplazado detrás del cartel. -->
+      <!-- Azulejo frame, offset behind the poster. -->
       <div
         class="absolute -inset-3 rotate-[2.5deg] rounded-[var(--radius-azulejo)] border-2 border-albero-400/50 sm:-inset-4"
         aria-hidden="true"
@@ -63,7 +63,7 @@ import { temporada } from '../data/temporada';
     </div>
   </div>
 
-  <!-- El Puente de Triana sobre el Guadalquivir. -->
+  <!-- The Triana bridge over the Guadalquivir. -->
   <PuenteDivider class="block h-12 w-full text-albero-400/45" scale={0.75} />
   <RioWave class="block h-6 w-full text-azulejo-700" />
 </section>

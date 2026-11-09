@@ -1,5 +1,6 @@
-// public/sw.js — Kill-switch del service worker de la web antigua (<= v20260905).
-// Mantener publicado al menos 6 meses tras la migración. No registrar desde ninguna página.
+// public/sw.js — kill switch for the old site's service worker (<= v20260905).
+// Keep it published for at least 6 months after the migration. Do not register
+// it from any page.
 self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (event) => {
@@ -9,7 +10,7 @@ self.addEventListener('activate', (event) => {
       await Promise.all(keys.filter((k) => k.startsWith('svq-triana-')).map((k) => caches.delete(k)));
       await self.registration.unregister();
       const clients = await self.clients.matchAll({ type: 'window' });
-      // Recarga para que la página salga del control del SW y pida la versión nueva.
+      // Reload so the page leaves the SW's control and fetches the new version.
       clients.forEach((client) => client.navigate(client.url));
     } catch (err) {
       console.warn('[sw-killswitch]', err);

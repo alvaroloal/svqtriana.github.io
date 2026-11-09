@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Comprueba el HTML generado en dist/ antes de publicarlo.
+ * Checks the HTML generated in dist/ before publishing it.
  *
- * Cada comprobación existe porque algo se rompió de verdad en el sitio
- * anterior: títulos duplicados, canonical con .html, navegación inyectada por
- * JS, ads.txt con mayúsculas, versiones que no coinciden con el CHANGELOG,
- * scripts inline bloqueados por la CSP o assets referenciados que no existen.
+ * Every check exists because something actually broke on the previous site:
+ * duplicated titles, canonicals with .html, navigation injected by JS, ads.txt
+ * with capitals, versions that did not match the CHANGELOG, inline scripts
+ * blocked by the CSP, or referenced assets that did not exist.
  *
- * Uso: node scripts/check-dist.mjs  (requiere haber hecho npm run build)
+ * Usage: node scripts/check-dist.mjs  (requires a prior npm run build)
  */
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
@@ -31,7 +31,6 @@ const PAGES = [
   { file: 'nosotros.html', path: '/nosotros', title: 'Nuestra historia | PS SVQ Triana' },
   { file: 'productos.html', path: '/productos', title: 'Material oficial | PS SVQ Triana' },
   { file: 'media.html', path: '/media', title: 'Galería de vídeos | PS SVQ Triana' },
-  { file: 'encuentro.html', path: '/encuentro', title: 'Dónde nos vemos | PS SVQ Triana' },
 ];
 
 const REQUIRED_FILES = [
@@ -39,7 +38,6 @@ const REQUIRED_FILES = [
   'nosotros.html',
   'productos.html',
   'media.html',
-  'encuentro.html',
   '404.html',
   'robots.txt',
   'sitemap.xml',
@@ -53,18 +51,18 @@ const REQUIRED_FILES = [
 ];
 
 for (const file of new Set(REQUIRED_FILES)) {
-  check(existsSync(join(DIST, file)), `falta dist/${file}`);
+  check(existsSync(join(DIST, file)), `missing dist/${file}`);
 }
 
-// Ficheros raíz que GitHub Pages sirve tal cual.
-check(read(join(DIST, 'CNAME')).trim() === 'svqtriana.com', 'CNAME no apunta a svqtriana.com');
+// Root files GitHub Pages serves verbatim.
+check(read(join(DIST, 'CNAME')).trim() === 'svqtriana.com', 'CNAME does not point at svqtriana.com');
 check(
   read(join(DIST, 'ads.txt')).trim() === 'google.com, pub-5217718596352992, DIRECT, f08c47fec0942fa0',
-  'ads.txt no conserva la línea de AdSense',
+  'ads.txt no longer carries the AdSense line',
 );
 check(
   read(join(DIST, 'robots.txt')).includes(`Sitemap: ${SITE}/sitemap.xml`),
-  'robots.txt no anuncia /sitemap.xml',
+  'robots.txt does not advertise /sitemap.xml',
 );
 
 const htmlFiles = readdirSync(DIST).filter((name) => name.endsWith('.html'));
@@ -76,69 +74,69 @@ const canonicals = new Map();
 for (const page of PAGES) {
   const text = html.get(page.file);
 
-  check(Boolean(text), `no se generó ${page.file}`);
+  check(Boolean(text), `${page.file} was not generated`);
   if (!text) continue;
 
   const title = one(/<title>(.*?)<\/title>/s, text);
-  check(title === page.title, `${page.file}: título inesperado (${title})`);
+  check(title === page.title, `${page.file}: unexpected title (${title})`);
 
   const canonical = one(/<link rel="canonical" href="(.*?)"/, text);
   const expectedCanonical = `${SITE}${page.path}`;
   check(canonical === expectedCanonical, `${page.file}: canonical ${canonical} != ${expectedCanonical}`);
-  check(!canonical?.endsWith('.html'), `${page.file}: el canonical conserva .html`);
-  check(!canonical?.endsWith('/') || page.path === '/', `${page.file}: el canonical lleva barra final`);
+  check(!canonical?.endsWith('.html'), `${page.file}: canonical keeps .html`);
+  check(!canonical?.endsWith('/') || page.path === '/', `${page.file}: canonical has a trailing slash`);
 
   const ogUrl = one(/<meta property="og:url" content="(.*?)"/, text);
   check(ogUrl === canonical, `${page.file}: og:url ${ogUrl} != canonical ${canonical}`);
 
-  check(/<meta name="description" content="[^"]+"/.test(text), `${page.file}: falta meta description`);
-  check(/<html lang="es"/.test(text), `${page.file}: falta lang="es"`);
-  check((text.match(/<h1\b/g) ?? []).length === 1, `${page.file}: debe tener exactamente un <h1>`);
+  check(/<meta name="description" content="[^"]+"/.test(text), `${page.file}: missing meta description`);
+  check(/<html lang="es"/.test(text), `${page.file}: missing lang="es"`);
+  check((text.match(/<h1\b/g) ?? []).length === 1, `${page.file}: must have exactly one <h1>`);
 
   const robots = one(/<meta name="robots" content="([^"]+)"/, text);
-  check(robots === 'index, follow', `${page.file}: robots es "${robots}" y debería ser index, follow`);
+  check(robots === 'index, follow', `${page.file}: robots is "${robots}", expected index, follow`);
 
-  // Menú y pie están en el HTML servido (nada de inyectarlos con JS).
-  for (const href of ['/#home', '/nosotros', '/productos', '/media', '/encuentro']) {
-    check(text.includes(`href="${href}"`), `${page.file}: falta el enlace ${href} en el HTML`);
+  // Menu and footer live in the served HTML (never injected by JS).
+  for (const href of ['/#home', '/nosotros', '/productos', '/media']) {
+    check(text.includes(`href="${href}"`), `${page.file}: missing link ${href} in the HTML`);
   }
 
-  // Ningún enlace interno con .html ni con barra final.
+  // No internal link with .html and none with a trailing slash.
   for (const match of text.matchAll(/href="(\/[^"#?]*)/g)) {
     const href = match[1];
-    check(!href.endsWith('.html'), `${page.file}: enlace interno con .html (${href})`);
-    check(href === '/' || !href.endsWith('/'), `${page.file}: enlace interno con barra final (${href})`);
+    check(!href.endsWith('.html'), `${page.file}: internal link with .html (${href})`);
+    check(href === '/' || !href.endsWith('/'), `${page.file}: internal link with a trailing slash (${href})`);
   }
 
   titles.set(page.file, title);
   canonicals.set(page.file, canonical);
 }
 
-check(titles.size === new Set(titles.values()).size, 'hay títulos duplicados entre páginas');
-check(canonicals.size === new Set(canonicals.values()).size, 'hay canonical duplicados entre páginas');
+check(titles.size === new Set(titles.values()).size, 'duplicated titles across pages');
+check(canonicals.size === new Set(canonicals.values()).size, 'duplicated canonicals across pages');
 
-// 404: noindex y enlaces a las cinco secciones.
+// 404: noindex and links to the four sections.
 const notFound = html.get('404.html');
-check(notFound !== undefined, 'no se generó 404.html');
+check(notFound !== undefined, '404.html was not generated');
 if (notFound) {
   check(
     /<meta name="robots" content="noindex, follow"/.test(notFound),
-    '404.html: debe ser noindex, follow',
+    '404.html: must be noindex, follow',
   );
-  for (const href of ['/#home', '/nosotros', '/productos', '/media', '/encuentro']) {
-    check(notFound.includes(`href="${href}"`), `404.html: falta el enlace ${href}`);
+  for (const href of ['/#home', '/nosotros', '/productos', '/media']) {
+    check(notFound.includes(`href="${href}"`), `404.html: missing link ${href}`);
   }
 }
 
-// Sin scripts inline ejecutables: la CSP no lleva 'unsafe-inline'.
+// No executable inline scripts: the CSP carries no 'unsafe-inline'.
 for (const [file, text] of html) {
   const inline = text.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/gi) ?? [];
-  check(inline.length === 0, `${file}: ${inline.length} <script> inline ejecutable(s)`);
-  check(!/\sstyle="/.test(text), `${file}: contiene atributos style="" inline`);
-  check(!/<style\b/i.test(text), `${file}: contiene un bloque <style> inline`);
+  check(inline.length === 0, `${file}: ${inline.length} executable inline <script>`);
+  check(!/\sstyle="/.test(text), `${file}: contains inline style="" attributes`);
+  check(!/<style\b/i.test(text), `${file}: contains an inline <style> block`);
 }
 
-// Nada de assets de terceros (solo enlaces <a>, que no cargan recursos).
+// No third-party assets (only <a> links, which load no resources).
 for (const [file, text] of html) {
   const remoteScript = text.match(/<script\b[^>]*\bsrc="(?:https?:)?\/\//gi) ?? [];
   const remoteImage = text.match(/<img\b[^>]*\bsrc="(?:https?:)?\/\//gi) ?? [];
@@ -146,20 +144,20 @@ for (const [file, text] of html) {
     text.match(
       /<link\b[^>]*\brel="(?:stylesheet|preload|icon|manifest|apple-touch-icon)"[^>]*\bhref="(?:https?:)?\/\//gi,
     ) ?? [];
-  check(remoteScript.length === 0, `${file}: script remoto (${remoteScript[0]})`);
-  check(remoteImage.length === 0, `${file}: imagen remota (${remoteImage[0]})`);
-  check(remoteLink.length === 0, `${file}: stylesheet/fuente remota (${remoteLink[0]})`);
+  check(remoteScript.length === 0, `${file}: remote script (${remoteScript[0]})`);
+  check(remoteImage.length === 0, `${file}: remote image (${remoteImage[0]})`);
+  check(remoteLink.length === 0, `${file}: remote stylesheet/font (${remoteLink[0]})`);
 }
 
-// JSON-LD parseable y con @context/@type.
+// JSON-LD parses and carries @context/@type.
 for (const [file, text] of html) {
   for (const raw of text.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try {
       const data = JSON.parse(raw[1]);
-      check(Boolean(data['@context']), `${file}: JSON-LD sin @context`);
-      check(Boolean(data['@type']), `${file}: JSON-LD sin @type`);
+      check(Boolean(data['@context']), `${file}: JSON-LD without @context`);
+      check(Boolean(data['@type']), `${file}: JSON-LD without @type`);
     } catch (error) {
-      failures.push(`${file}: JSON-LD inválido (${error.message})`);
+      failures.push(`${file}: invalid JSON-LD (${error.message})`);
     }
   }
 }
@@ -167,11 +165,11 @@ for (const [file, text] of html) {
 const productosHtml = html.get('productos.html') ?? '';
 check(
   (productosHtml.match(/"@type":"Offer"|"@type":"AggregateOffer"/g) ?? []).length === 4,
-  'productos.html: el JSON-LD debe listar los 4 productos',
+  'productos.html: the JSON-LD must list the 4 products',
 );
-check(productosHtml.includes('Pulsera oficial'), 'productos.html: falta la pulsera');
+check(productosHtml.includes('Pulsera oficial'), 'productos.html: missing the bracelet');
 
-// Galería: seis enlaces a YouTube, ni un iframe.
+// Gallery: six YouTube links, not a single iframe.
 const mediaHtml = html.get('media.html') ?? '';
 const youtubeIds = [
   'Nz1E1GyG1EA',
@@ -182,35 +180,21 @@ const youtubeIds = [
   'C85CSoQkVy8',
 ];
 for (const id of youtubeIds) {
-  check(mediaHtml.includes(`https://youtu.be/${id}`), `media.html: falta el vídeo ${id}`);
+  check(mediaHtml.includes(`https://youtu.be/${id}`), `media.html: missing video ${id}`);
 }
-check(!/<iframe\b/i.test(mediaHtml), 'media.html: no debe incluir iframes');
+check(!/<iframe\b/i.test(mediaHtml), 'media.html: must not contain iframes');
 
-// Encuentro: mapa bajo demanda, con enlace externo y sin iframe inicial.
-const encuentroHtml = html.get('encuentro.html') ?? '';
-check(encuentroHtml.includes('data-map-load'), 'encuentro.html: falta el botón data-map-load');
-check(
-  encuentroHtml.includes('data-map-src="https://www.google.com/maps/embed'),
-  'encuentro.html: falta la URL del mapa de Google',
-);
-check(!/<iframe\b/i.test(encuentroHtml), 'encuentro.html: el iframe no debe cargarse de inicio');
-check(encuentroHtml.includes('Abrir en Google Maps'), 'encuentro.html: falta el enlace a Google Maps');
-check(
-  /<meta name="robots" content="index, follow"/.test(encuentroHtml),
-  'encuentro.html: debe ser indexable',
-);
-
-// Pie de página: versión coherente con el CHANGELOG.
+// Footer: version consistent with the CHANGELOG.
 const changelog = read(join(ROOT, 'CHANGELOG.md'));
 const changelogVersion = changelog.match(/^## (v\d{8}(?:\.\d+)?)/m)?.[1];
-check(Boolean(changelogVersion), 'CHANGELOG.md: falta una entrada ## vYYYYMMDD');
+check(Boolean(changelogVersion), 'CHANGELOG.md: missing a ## vYYYYMMDD entry');
 for (const page of PAGES) {
   const text = html.get(page.file) ?? '';
   const version = text.match(/class="footer-version[^"]*"[^>]*>(v[^<]+)</)?.[1];
-  check(version === changelogVersion, `${page.file}: versión ${version} != ${changelogVersion}`);
+  check(version === changelogVersion, `${page.file}: version ${version} != ${changelogVersion}`);
 }
 
-// Sitemap: las cinco URLs, sin barra final, con lastmod ISO.
+// Sitemap: one URL per page, no trailing slash, ISO lastmod.
 const sitemap = read(join(DIST, 'sitemap.xml'));
 const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
 const expectedLocs = PAGES.map((page) => `${SITE}${page.path}`);
@@ -218,23 +202,30 @@ check(
   JSON.stringify(locs) === JSON.stringify(expectedLocs),
   `sitemap.xml: URLs ${JSON.stringify(locs)} != ${JSON.stringify(expectedLocs)}`,
 );
-check((sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g) ?? []).length === 5, 'sitemap.xml: faltan lastmod');
+check(
+  (sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g) ?? []).length === PAGES.length,
+  'sitemap.xml: missing lastmod entries',
+);
 
-// llms.txt: las cinco páginas, sin la mención obsoleta a la camiseta oficial.
+// llms.txt: every page, without the stale official-shirt mention.
 const llms = read(join(DIST, 'llms.txt'));
 for (const page of PAGES) {
-  check(llms.includes(`${SITE}${page.path}`), `llms.txt: falta ${page.path}`);
+  check(llms.includes(`${SITE}${page.path}`), `llms.txt: missing ${page.path}`);
 }
-check(!/camiseta oficial/i.test(llms), 'llms.txt: sigue mencionando la camiseta oficial');
-check(llms.includes('Cervecería el Punto de Triana'), 'llms.txt: falta el punto de encuentro');
+check(!/camiseta oficial/i.test(llms), 'llms.txt: still mentions the official shirt');
+check(llms.includes('## Preguntas frecuentes'), 'llms.txt: missing the FAQ block');
+check(
+  /docs\.google\.com\/forms\/d\/e\/[\w-]+\/viewform/.test(llms),
+  'llms.txt: the FAQ does not link the membership form',
+);
 
-// Kill-switch del service worker antiguo.
+// Kill switch for the old service worker.
 const sw = read(join(DIST, 'sw.js'));
-check(sw.includes('caches.keys()'), 'sw.js: falta la limpieza de cachés');
-check(sw.includes('registration.unregister()'), 'sw.js: falta unregister()');
-check(!/addEventListener\(\s*['"]fetch['"]/.test(sw), 'sw.js: no debe interceptar fetch');
+check(sw.includes('caches.keys()'), 'sw.js: missing cache cleanup');
+check(sw.includes('registration.unregister()'), 'sw.js: missing unregister()');
+check(!/addEventListener\(\s*['"]fetch['"]/.test(sw), 'sw.js: must not intercept fetch');
 
-/** Resuelve una URL local contra dist/, como hace GitHub Pages. */
+/** Resolves a local URL against dist/, the way GitHub Pages does. */
 function resolveLocal(url, fromFile) {
   const clean = url.split(/[?#]/)[0];
   if (!clean || clean.startsWith('data:') || clean.startsWith('#')) return null;
@@ -254,7 +245,7 @@ function resolveLocal(url, fromFile) {
   return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile()) ?? null;
 }
 
-// Todos los assets y enlaces locales referenciados existen.
+// Every referenced local asset and link exists.
 for (const [file, text] of html) {
   const fromFile = join(DIST, file);
   const urls = [];
@@ -267,14 +258,14 @@ for (const [file, text] of html) {
   for (const url of new Set(urls)) {
     if (url.startsWith('data:')) continue;
     if (resolveLocal(url, fromFile) === null) {
-      // Los enlaces externos y mailto se ignoran dentro de resolveLocal.
+      // External and mailto links are ignored inside resolveLocal.
       if (/^(?:https?:)?\/\//.test(url) || /^(?:mailto|tel):/.test(url) || url.startsWith('#')) continue;
-      failures.push(`${file}: referencia local rota (${url})`);
+      failures.push(`${file}: broken local reference (${url})`);
     }
   }
 }
 
-// Los url() de los CSS también existen.
+// CSS url() targets exist too.
 const astroDir = join(DIST, '_astro');
 if (existsSync(astroDir)) {
   for (const name of readdirSync(astroDir).filter((entry) => entry.endsWith('.css'))) {
@@ -284,27 +275,27 @@ if (existsSync(astroDir)) {
       const url = match[2];
       if (url.startsWith('data:')) continue;
       if (resolveLocal(url, cssFile) === null && !/^(?:https?:)?\/\//.test(url)) {
-        failures.push(`_astro/${name}: asset CSS roto (${url})`);
+        failures.push(`_astro/${name}: broken CSS asset (${url})`);
       }
     }
   }
 }
 
-// Ningún PNG generado. El fallback de <Picture> se deriva del formato del
-// maestro; si el maestro es WebP o JPEG, un PNG en _astro significa que Astro
-// está emitiendo una versión mucho más pesada que el original (pasó con la
-// pulsera: 275 kB de PNG para un WebP de 21 kB). Los maestros PNG legítimos
-// deberían convertirse antes de importarlos.
+// No generated PNG. The <Picture> fallback is derived from the master's
+// format; if the master is WebP or JPEG, a PNG in _astro means Astro is
+// emitting a far heavier version than the original (this happened with the
+// bracelet: a 275 kB PNG for a 21 kB WebP). Legitimate PNG masters should be
+// converted before importing them.
 if (existsSync(astroDir)) {
   for (const name of readdirSync(astroDir).filter((entry) => entry.endsWith('.png'))) {
-    failures.push(`_astro/${name}: PNG generado; revisa el formato del maestro`);
+    failures.push(`_astro/${name}: generated PNG; check the master's format`);
   }
 }
 
 if (failures.length > 0) {
-  console.error(`\n${failures.length} fallo(s) en dist/:\n`);
+  console.error(`\n${failures.length} failure(s) in dist/:\n`);
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log(`ok: ${PAGES.length} páginas, 404, sitemap, llms.txt y assets coherentes`);
+console.log(`ok: ${PAGES.length} pages, 404, sitemap, llms.txt and assets consistent`);

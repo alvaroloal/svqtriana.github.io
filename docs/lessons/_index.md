@@ -1,18 +1,20 @@
-# Lecciones
+# Lessons
 
-Qué falló aquí, por qué, y qué lo impide ahora. Lo más reciente primero. Las
-trampas recurrentes están resumidas en la sección *Trampas* del README; esto son
-las cuentas completas.
+What broke here, why, and what prevents it now. Most recent first. Recurring
+traps are summarised in the *Traps* section of the README; these are the full
+accounts.
 
-| Fecha | Lección |
+| Date | Lesson |
 |---|---|
-| 2026-11-08 | [Una columna de grid crece hasta la palabra más larga](2026-11-08-grid-column-grows-to-longest-word.md) |
-| 2026-11-05 | [Astro inlinea lo que la CSP prohíbe](2026-11-05-astro-inlines-what-the-csp-forbids.md) |
-| 2026-11-05 | [El sitemap de Astro es un índice, no un sitemap](2026-11-05-sitemap-index-is-not-a-sitemap.md) |
-| 2026-11-05 | [Un fallback más pesado que el original](2026-11-05-picture-fallback-heavier-than-source.md) |
-| 2026-11-05 | [La preview de Astro no es GitHub Pages](2026-11-05-preview-is-not-pages.md) |
-| 2026-11-05 | [Un `aria-label` sustituye al texto visible, no lo completa](2026-11-05-aria-label-hides-visible-text.md) |
-| 2026-11-05 | [Blanco al 80 % sobre rojo no llega a 4,5:1](2026-11-05-alpha-white-on-brand-red.md) |
+| 2026-11-09 | [A fork PR is reviewed by nobody](2026-11-09-a-fork-pr-is-reviewed-by-nobody.md) |
+| 2026-11-09 | [A guard whose glob matches nothing passes forever](2026-11-09-a-guard-that-matches-nothing-passes.md) |
+| 2026-11-08 | [A grid column grows to the longest word](2026-11-08-grid-column-grows-to-longest-word.md) |
+| 2026-11-05 | [Astro inlines what the CSP forbids](2026-11-05-astro-inlines-what-the-csp-forbids.md) |
+| 2026-11-05 | [Astro's sitemap is an index, not a sitemap](2026-11-05-sitemap-index-is-not-a-sitemap.md) |
+| 2026-11-05 | [A fallback heavier than the original](2026-11-05-picture-fallback-heavier-than-source.md) |
+| 2026-11-05 | [The Astro preview is not GitHub Pages](2026-11-05-preview-is-not-pages.md) |
+| 2026-11-05 | [An `aria-label` replaces the visible text, it does not complete it](2026-11-05-aria-label-hides-visible-text.md) |
+| 2026-11-05 | [80 % white on red does not reach 4,5:1](2026-11-05-alpha-white-on-brand-red.md) |
 | 2026-09-05 | [The pruner read the licence banner as a selector list](2026-09-05-pruner-dropped-the-licence.md) |
 | 2026-09-05 | [A gate that is its own job status can only answer once](2026-09-05-report-verdicts-through-the-checks-api.md) |
 | 2026-09-05 | [Turning off a parent feature does not turn off what it turned on](2026-09-05-parent-toggle-does-not-undo-child.md) |
@@ -21,9 +23,8 @@ las cuentas completas.
 | 2026-09-05 | [A UI check must assert visibility, and run at the width where the answer can be no](2026-09-05-ui-check-must-assert-visibility.md) |
 | 2026-09-04 | [Merging a stacked PR bottom-first orphans everything above it](2026-09-04-stacked-prs-merge-top-down.md) |
 
-## Añadir una
+## Adding one
 
-Un fichero por lección, `YYYY-MM-DD-slug.md`, fechado cuando se aprendió. Explica
-el mecanismo, no solo el síntoma, y termina con lo que lo detecta ahora: un
-check, un workflow, una línea de un runbook. Una lección que no cambió nada es
-una página de diario.
+One file per lesson, `YYYY-MM-DD-slug.md`, dated when it was learned. Explain
+the mechanism, not only the symptom, and end with what detects it now: a check,
+a workflow, a line in a runbook. A lesson that changed nothing is a diary page.

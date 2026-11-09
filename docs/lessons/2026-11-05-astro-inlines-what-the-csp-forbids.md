@@ -1,31 +1,32 @@
-# Astro inlinea lo que la CSP prohíbe
+# Astro inlines what the CSP forbids
 
-## Qué pasó
+## What happened
 
-El primer build de la migración tenía un `<script>` con el menú móvil, las
-galerías y el mapa dentro de cada HTML. No lo escribimos inline: Astro compiló
-el `<script>` de `BaseLayout` a un chunk y Vite lo volvió a incrustar porque
-pesaba menos que `build.assetsInlineLimit` (4 KB por defecto). El build estaba
-verde; el fallo habría aparecido solo en producción, con `script-src 'self'` y
-sin `'unsafe-inline'`: el navegador habría bloqueado el script y el menú móvil
-no habría abierto.
+The first build of the migration had a `<script>` with the mobile menu and the
+galleries inside every HTML. We did not write it inline: Astro compiled the
+`<script>` from `BaseLayout` into a chunk and Vite embedded it again because it
+weighed less than `build.assetsInlineLimit` (4 KB by default). The build was
+green; the failure would only have appeared in production, with
+`script-src 'self'` and no `'unsafe-inline'`: the browser would have blocked the
+script and the mobile menu would not have opened.
 
-Lo mismo con el CSS. `build.inlineStylesheets` vale `'auto'` por defecto e
-incrusta en `<style>` las hojas pequeñas, que `style-src 'self'` también bloquea.
+The same with CSS. `build.inlineStylesheets` is `'auto'` by default and embeds
+small stylesheets in `<style>`, which `style-src 'self'` also blocks.
 
-## Mecanismo
+## Mechanism
 
-La decisión de inlinear no es de Astro sino de Vite: `shouldInlineAsset` compara
-el tamaño del chunk con `assetsInlineLimit`. Un script de 2 KB se inlinea aunque
-el componente lo declare como módulo externo. No hay aviso; el HTML servido es
-distinto del que esperabas.
+The decision to inline is not Astro's but Vite's: `shouldInlineAsset` compares
+the chunk size with `assetsInlineLimit`. A 2 KB script gets inlined even if the
+component declares it as an external module. There is no warning; the served
+HTML is not the one you expected.
 
-## Qué lo impide ahora
+## What prevents it now
 
-- `astro.config.mjs` fija `vite.build.assetsInlineLimit: 0` e
+- `astro.config.mjs` sets `vite.build.assetsInlineLimit: 0` and
   `inlineStylesheets: 'never'`.
-- `scripts/check-dist.mjs` falla si algún HTML contiene un `<script>` sin `src`
-  que no sea `application/ld+json`, un bloque `<style>` o un atributo `style=""`.
-- La CSP de `infra/cloudflare/headers.tf` no lleva `'unsafe-inline'` ni en
-  `script-src` ni en `style-src`, así que el fallo no puede taparse por
-  accidente.
+- `scripts/check-dist.mjs` fails if any HTML contains a `<script>` without `src`
+  that is not `application/ld+json`, a `<style>` block or a `style=""`
+  attribute.
+- The CSP in `infra/cloudflare/headers.tf` carries `'unsafe-inline'` neither in
+  `script-src` nor in `style-src`, so the failure cannot be papered over by
+  accident.

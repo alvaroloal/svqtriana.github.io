@@ -1,8 +1,7 @@
 /**
- * Único JavaScript propio del sitio:
- *  - menú móvil <details>: cerrar con Esc, clic fuera o al navegar;
- *  - galerías de producto: botones anterior/siguiente con scroll-snap;
- *  - mapa de Google: cargar el iframe solo al pulsar (click-to-load).
+ * The site's only hand-written JavaScript:
+ *  - mobile menu <details>: close on Esc, on an outside click or on navigation;
+ *  - product galleries: previous/next buttons with scroll-snap.
  */
 const menus = document.querySelectorAll<HTMLDetailsElement>('details[data-mobile-nav]');
 
@@ -50,26 +49,5 @@ galleryButtons.forEach((button) => {
       left: direction * gallery.clientWidth,
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
-  });
-});
-
-const mapButtons = document.querySelectorAll<HTMLButtonElement>('[data-map-load]');
-
-mapButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    const src = button.dataset.mapSrc;
-    if (!src) return;
-
-    // El iframe solo existe tras la interacción: sin cookies de terceros al cargar.
-    const iframe = document.createElement('iframe');
-    iframe.src = src;
-    iframe.title = button.dataset.mapTitle ?? 'Mapa de Google';
-    iframe.loading = 'lazy';
-    iframe.referrerPolicy = 'no-referrer-when-downgrade';
-    iframe.setAttribute('allowfullscreen', '');
-    iframe.className = 'block h-[22rem] w-full border-0';
-
-    button.replaceWith(iframe);
-    iframe.focus();
   });
 });

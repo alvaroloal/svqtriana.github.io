@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 /*
- * Nada se sale del ancho de la pantalla en móvil, tampoco con la letra del
- * sistema ampliada. Ver docs/lessons/2026-11-08-grid-column-grows-to-longest-word.md.
+ * Nothing overflows the viewport width on mobile, not even with the system font
+ * enlarged. See docs/lessons/2026-11-08-grid-column-grows-to-longest-word.md.
  */
-const PAGES = ['/', '/nosotros', '/productos', '/media', '/encuentro'];
+const PAGES = ['/', '/nosotros', '/productos', '/media'];
 const CASES = [
   { width: 320, fontScale: 100 },
   { width: 360, fontScale: 100 },
@@ -13,11 +13,11 @@ const CASES = [
 ];
 
 for (const { width, fontScale } of CASES) {
-  test.describe(`${width}px con la letra al ${fontScale} %`, () => {
+  test.describe(`${width}px with the font at ${fontScale}%`, () => {
     test.use({ viewport: { width, height: 800 } });
 
     for (const path of PAGES) {
-      test(`${path} no se sale de la pantalla`, async ({ page }) => {
+      test(`${path} does not overflow the viewport`, async ({ page }) => {
         await page.goto(path);
         if (fontScale !== 100) {
           await page.addStyleTag({ content: `html { font-size: ${fontScale}%; }` });
@@ -27,7 +27,7 @@ for (const { width, fontScale } of CASES) {
           const viewport = document.documentElement.clientWidth;
           const hits: string[] = [];
           for (const element of document.querySelectorAll<HTMLElement>('body *')) {
-            // Los carruseles de producto se desplazan en horizontal a propósito.
+            // Product carousels scroll horizontally on purpose.
             if (element.closest('svg, [aria-hidden="true"], [data-gallery]')) continue;
             const rect = element.getBoundingClientRect();
             if (rect.width === 0) continue;
@@ -39,7 +39,7 @@ for (const { width, fontScale } of CASES) {
           return hits;
         });
 
-        expect(overflowing, `Elementos fuera de ${width}px:\n${overflowing.join('\n')}`).toEqual([]);
+        expect(overflowing, `Elements overflowing ${width}px:\n${overflowing.join('\n')}`).toEqual([]);
       });
     }
   });

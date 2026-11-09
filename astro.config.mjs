@@ -18,7 +18,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     build: {
-      // Evita que Astro incruste el script del menú/galería/mapa en el HTML.
+      // Keeps Astro from inlining the menu/gallery script into the HTML.
       assetsInlineLimit: 0,
     },
   },

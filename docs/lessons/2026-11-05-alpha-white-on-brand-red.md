@@ -1,22 +1,22 @@
-# Blanco al 80 % sobre rojo no llega a 4,5:1
+# 80 % white on red does not reach 4,5:1
 
-## Qué pasó
+## What happened
 
-La tarjeta de precios destacada usaba `text-white/80` y `text-white/85` sobre
-`bg-sevilla-500` (#df0606). Axe calculó 3,51:1 y 3,86:1. El texto era pequeño
-(12 y 14 px), así que el umbral AA es 4,5:1. El rojo de marca es oscuro pero no
-tanto: cualquier blanco con alfa pierde el contraste que el blanco puro sí tiene
+The featured price card used `text-white/80` and `text-white/85` over
+`bg-sevilla-500` (#df0606). Axe computed 3,51:1 and 3,86:1. The text was small
+(12 and 14 px), so the AA threshold is 4,5:1. The brand red is dark but not dark
+enough: any white with alpha loses the contrast that pure white does have
 (5,2:1).
 
-## Mecanismo
+## Mechanism
 
-El contraste se calcula sobre el color **compuesto**, no sobre el declarado. Un
-`/80` de Tailwind no es «un blanco suave»: es blanco mezclado con el fondo, y el
-resultado se acerca al rojo. En una tarjeta con texto de 12 px no hay margen.
+Contrast is computed on the **composited** colour, not the declared one. A
+Tailwind `/80` is not "a soft white": it is white mixed with the background, and
+the result drifts towards the red. On a card with 12 px text there is no margin.
 
-## Qué lo impide ahora
+## What prevents it now
 
-`PriceCard.astro` usa `text-white` para la etiqueta y el precio con camiseta en
-la variante destacada. `tests/a11y.spec.ts` ejecuta axe en `/` y falla si
-`color-contrast` vuelve a aparecer como `serious` o `critical`. La paleta y los
-pares verificados están en `MIGRACION-ASTRO.md` §6.2.
+`PriceCard.astro` uses `text-white` for the label and for the price with shirt
+in the featured variant. `tests/a11y.spec.ts` runs axe on `/` and fails if
+`color-contrast` comes back as `serious` or `critical`. The palette and the
+verified pairs are in `src/styles/global.css`.

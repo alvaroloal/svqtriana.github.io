@@ -1,12 +1,12 @@
 /**
- * Datos del cartel que se usa como imagen social (Open Graph / Twitter).
+ * Data for the poster used as the social image (Open Graph / Twitter).
  *
- * Vive aparte de `temporada.ts` a propósito: `temporada.ts` importa el maestro
- * de la imagen, y `site.ts` (que usan todas las páginas) solo necesita la ruta
- * pública y el alt. Separarlo evita arrastrar el asset a todos los módulos.
+ * Kept apart from `temporada.ts` on purpose: `temporada.ts` imports the image
+ * master, while `site.ts` (used by every page) only needs the public path and
+ * the alt. Separating them avoids dragging the asset into every module.
  *
- * Al cambiar de temporada se editan los tres valores aquí y el import de
- * `temporada.ts`. Lo comprueba `npm run check:dist` (og:image y JSON-LD).
+ * Changing season means editing the three values here and the import in
+ * `temporada.ts`. `npm run check:dist` asserts it (og:image and JSON-LD).
  */
 export const cartelOg = '/images/cartel-27.jpg';
 export const cartelOgSize = { width: 1131, height: 1600 };

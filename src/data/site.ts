@@ -67,7 +67,6 @@ export const nav = [
   { label: 'NUESTRA HISTORIA', href: '/nosotros' },
   { label: 'MATERIAL', href: '/productos' },
   { label: 'GALERÍA', href: '/media' },
-  { label: 'ENCUENTRO', href: '/encuentro' },
 ] as const;
 
 export const membershipUrl = site.formUrl;

@@ -1,125 +1,149 @@
 # Changelog
 
-Qué cambia en [svqtriana.com](https://svqtriana.com), de lo más reciente a lo
-más antiguo.
+What changes on [svqtriana.com](https://svqtriana.com), newest first.
 
-La versión es la fecha del despliegue: `vYYYYMMDD`, con `.N` para un segundo
-despliegue el mismo día. Es la misma cadena que muestra el pie de página y la
-que el build lee de la primera entrada de este fichero.
+The version is the deploy date: `vYYYYMMDD`, with `.N` for a second deploy the
+same day. It is the same string the footer shows and the one the build reads
+from the first entry in this file.
+
+---
+
+## v20261109
+
+Review of the migration before it lands. The site keeps its four sections; what
+changes is what ships, what the crawlers are told, and what CI checks.
+
+### The site
+
+- **`/encuentro` is gone.** The venue page is not part of the redesign and the
+  route disappears with it. It was never indexed (`noindex, follow`), so no
+  redirect is needed.
+- **The `/llms.txt` gained an FAQ block**: eight answerable questions about the
+  peña, the season, the material and how to join, phrased so an assistant can
+  quote them. `public/robots.txt` now says in words that crawlers are welcome.
+
+### Under the hood
+
+- **The dead Google Maps loader is out of `nav.ts`.** It looked for a
+  `[data-map-load]` element the templates no longer render, so it never ran.
+- **One version mechanism, not two.** The build reads the version from this
+  file's first entry; the `PUBLIC_SITE_VERSION` step in `deploy.yml` is gone.
+- **The reviewer harness is a repository artifact**, not tribal knowledge:
+  `harness/` holds the pool and the review-attestation registry, and
+  `scripts/check-harness.mjs` fails when either drifts from the workflow that
+  reads it.
+- **`edge-drift.yml` checks the files that exist**, on real paths, and its
+  `push` filter no longer names paths that were deleted in the migration.
 
 ---
 
 ## v20261108
 
-Rediseño de páginas y componentes. Los textos, las URLs y los datos de la peña
-no cambian; cambia cómo se disponen y cómo se ven.
+Page and component redesign. The copy, the URLs and the club's data do not
+change; what changes is how they are laid out and how they look.
 
-### El sitio
+### The site
 
-- **Cabecera con nombre**: el escudo va acompañado de «SVQ Triana · Peña
-  Sevillista» y la sección activa se subraya en albero.
-- **Cabeceras de página oscuras** en `/nosotros`, `/productos`, `/media` y
-  `/encuentro`, con el azulejo de fondo, a juego con la portada.
-- **El Puente de Triana, redibujado**: arcos, aros que menguan hacia la clave,
-  pilas y farolas. Ya no se deforma con el ancho de pantalla. Aparece sobre el
-  río al pie del hero, en el pie de página y en el cierre de la historia.
-- **Franjas rojiblancas** del escudo, solo en el pie y en el cierre de
+- **Header with the name**: the crest now sits beside "SVQ Triana · Peña
+  Sevillista", and the active section is underlined in albero.
+- **Dark page headers** on `/nosotros`, `/productos` and `/media`, with the
+  azulejo behind them, matching the home page.
+- **The Triana bridge, redrawn**: arches, rings that shrink towards the
+  keystone, piers and lampposts. It no longer distorts with the viewport width.
+  It appears over the river below the hero, in the footer and at the end of the
+  history page.
+- **Red-and-white stripes** from the crest, only in the footer and at the end of
   `/nosotros`.
-- **Portada**: «Hazte socio» a dos columnas, «La peña» en mosaico con fotos
-  grandes y la cita de Triana con más presencia.
-- **Nuestra historia**: texto a ancho de lectura, fechas que caben en su
-  etiqueta, fotos completas en formato álbum y el último hito como cierre con
-  el botón de hacerse socio.
-- **Material**: cuatro tarjetas por fila en escritorio y fotos enteras, sin
-  recortar las pegatinas ni la bandera.
-- **Galería**: el vídeo destacado ocupa dos filas y los dos siguientes se
-  apilan a su lado, sin huecos.
-- **Encuentro**: el hueco del mapa tiene el alto del mapa, así que la página no
-  salta al pulsar «Ver mapa».
-- **Pie** en tres columnas: marca y redes, contacto y secciones.
-- **El hero ya no se corta en móviles estrechos** ni con la letra del sistema
-  ampliada: «TEMPORADA», el antetítulo y los botones caben siempre en
-  pantalla. Una prueba nueva (`tests/overflow.spec.ts`) lo comprueba en las
-  cinco páginas.
+- **Home page**: "Hazte socio" in two columns, "La peña" as a mosaic with large
+  photos, and the Triana quote given more room.
+- **Nuestra historia**: reading-width text, dates that fit their label, full
+  photos in album format, and the last milestone as a closing panel with the
+  join button.
+- **Material**: four cards per row on desktop and full photos, with the stickers
+  and the flag no longer cropped.
+- **Galería**: the featured video spans two rows and the next two stack beside
+  it, with no gaps.
+- **Footer** in three columns: brand and socials, contact, sections.
+- **The hero no longer clips on narrow phones**, nor with the system font
+  enlarged: "TEMPORADA", the kicker and the buttons always fit on screen. A new
+  test (`tests/overflow.spec.ts`) checks it on all four pages.
 
-### Rendimiento y accesibilidad
+### Performance and accessibility
 
-Lighthouse móvil sobre `dist/`, con Lighthouse CI:
+Mobile Lighthouse over `dist/`, with Lighthouse CI:
 
-| Página | Performance | Accesibilidad | Best Practices | SEO | CLS |
+| Page | Performance | Accessibility | Best Practices | SEO | CLS |
 |---|---:|---:|---:|---:|---:|
 | `/` | 95 | 100 | 100 | 100 | 0 |
 | `/nosotros` | 100 | 100 | 100 | 100 | 0 |
 | `/productos` | 94 | 100 | 100 | 100 | 0 |
 | `/media` | 96 | 100 | 100 | 100 | 0 |
-| `/encuentro` | 98 | 100 | 100 | 100 | 0 |
 
 ---
 
 ## v20261105
 
-Migración del sitio a Astro 7 y Tailwind CSS v4. El contenido, las URLs y los
-datos de la peña no cambian; cambia cómo se genera y se sirve la web.
+Migration of the site to Astro 7 and Tailwind CSS v4. The content, the URLs and
+the club's data do not change; what changes is how the site is generated and
+served.
 
-### El sitio
+### The site
 
-- **Las cinco secciones siguen en su URL**, sin `.html` y sin barra final:
-  `/`, `/nosotros`, `/productos`, `/media` y `/encuentro`.
-- **`/encuentro` pasa a ser pública**: se enlaza en el menú, se indexa y entra
-  en el sitemap. Sigue mostrando el cartel de la Cervecería el Punto de Triana,
-  ahora con el mapa bajo demanda.
-- **Vídeos con enlace a YouTube**, sin iframes ni cookies de terceros.
-- **Mapa de Google bajo demanda**: solo se carga al pulsar «Ver mapa».
-- **Material sin carrito**, como antes: se pide por Instagram o email.
-- **Diseño nuevo** con los motivos del barrio (azulejo, Puente de Triana y río),
-  tipografía Fraunces para los titulares y Glacial Indifference para el texto.
+- **The four sections keep their URL**, with no `.html` and no trailing slash:
+  `/`, `/nosotros`, `/productos` and `/media`.
+- **`/encuentro` is retired**: the page is not migrated, and it leaves the menu,
+  `sitemap.xml`, `llms.txt` and the precache. It was never indexed
+  (`noindex, follow`), so it leaves no dead links to redirect.
+- **Videos link out to YouTube**, with no iframes and no third-party cookies.
+- **No iframes on any page**: no embed survives, the map included.
+- **Material with no cart**, as before: it is ordered by Instagram or email.
+- **New design** with the neighbourhood's motifs (azulejo, the Triana bridge and
+  the river), Fraunces for headings and Glacial Indifference for body text.
 
-### Rendimiento y accesibilidad
+### Performance and accessibility
 
-- HTML estático, sin jQuery, Bootstrap ni carruseles de terceros.
-- JavaScript propio mínimo: menú móvil, galerías de producto y mapa bajo
-  demanda.
-- Imágenes en AVIF y WebP con `astro:assets`; fuentes locales en WOFF2.
-- Sin scripts inline ejecutables: compatible con la CSP sin `'unsafe-inline'`.
-- Lighthouse móvil sobre `dist/`, con Lighthouse CI:
+- Static HTML, with no jQuery, Bootstrap or third-party carousels.
+- Minimal first-party JavaScript: the mobile menu and the product galleries.
+- AVIF and WebP images through `astro:assets`; local WOFF2 fonts.
+- No executable inline scripts: compatible with a CSP that has no
+  `'unsafe-inline'`.
+- Mobile Lighthouse over `dist/`, with Lighthouse CI:
 
-  | Página | Performance | Accesibilidad | Best Practices | SEO | CLS |
+  | Page | Performance | Accessibility | Best Practices | SEO | CLS |
   |---|---:|---:|---:|---:|---:|
   | `/` | 96 | 100 | 100 | 100 | 0 |
   | `/nosotros` | 100 | 100 | 100 | 100 | 0 |
   | `/productos` | 95 | 100 | 100 | 100 | 0 |
   | `/media` | 96 | 100 | 100 | 100 | 0 |
-  | `/encuentro` | 98 | 100 | 100 | 100 | 0 |
 
-  El CI falla si Performance baja de 90, Accesibilidad o SEO de 100, Best
-  Practices de 95 o CLS supera 0,02.
+  CI fails if Performance drops below 90, Accessibility or SEO below 100, Best
+  Practices below 95, or CLS goes above 0.02.
 
-### Infraestructura
+### Infrastructure
 
-- Publicación con GitHub Actions y GitHub Pages (sin cambiar de proveedor); las
-  actions van fijadas por SHA.
-- `sw.js` se mantiene como kill-switch del service worker antiguo.
-- La CSP se estrecha: fuera jQuery, fuera `'unsafe-inline'` de `style-src` y
-  fuera YouTube de `frame-src`. Solo queda Google Maps, y bajo demanda.
-- Los assets con hash de `/_astro/*` se cachean un año en el edge y en el
-  navegador. `sw.js` sigue sin cachearse.
-- `terraform validate` y `terraform fmt -check` corren en CI; el `apply` sigue
-  siendo un acto humano en el corte.
+- Published with GitHub Actions and GitHub Pages (no change of provider); the
+  actions are pinned by SHA.
+- `sw.js` is kept as the kill-switch for the old service worker.
+- The CSP narrows: jQuery gone, `'unsafe-inline'` gone from `style-src`, YouTube
+  gone from `frame-src`. `frame-src` is now `'none'`, because the map went with
+  the redesign.
+- Hashed `/_astro/*` assets are cached for a year at the edge and in the
+  browser. `sw.js` is still not cached.
+- `terraform validate` and `terraform fmt -check` run in CI; `apply` remains a
+  human act at cutover.
 
-### Antes de la migración
+### Before the migration
 
-Última medición de producción del sitio anterior (`v20260905`), según su
-CHANGELOG: Performance 82, Accesibilidad 100, CLS 0, TBT 0 ms, 436 KB y 19
-peticiones.
+Last production measurement of the previous site (`v20260905`), per its own
+CHANGELOG: Performance 82, Accessibility 100, CLS 0, TBT 0 ms, 436 KB and 19
+requests.
 
 ---
 
-## Historial anterior a la migración
+## History before the migration
 
-Entradas del sitio en HTML escrito a mano, tal como estaban en este repositorio
-antes de pasar a Astro. Se conservan sin cambios (en inglés, como se
-escribieron).
-
+Entries from the hand-written HTML site, exactly as they stood in this
+repository before the move to Astro. Kept unchanged.
 ### v20260905
 
 The first full maintenance pass in a year, and the season 26/27 poster.

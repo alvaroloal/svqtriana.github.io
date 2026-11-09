@@ -1,43 +1,41 @@
-# Una columna de grid crece hasta la palabra más larga
+# A grid column grows to the longest word
 
-## Qué pasó
+## What happened
 
-En la vista previa del rediseño, en un móvil real, el hero de la portada se
-cortaba por la derecha: «TEMPORADA», el antetítulo «… Desde 2019» y los botones
-«Hazte socio» y «Ver precios». En las capturas de 390 px se veía bien, porque
-«TEMPORADA» cabía por pocos píxeles. Bastaba un móvil más estrecho o la letra
-del sistema algo más grande para que dejara de caber.
+In the redesign preview, on a real phone, the home page hero was cut off on the
+right: "TEMPORADA", the eyebrow "… Desde 2019" and the buttons "Hazte socio" and
+"Ver precios". In the 390 px screenshots it looked fine, because "TEMPORADA"
+fitted by a few pixels. A narrower phone or a slightly larger system font was
+enough for it to stop fitting.
 
-## Mecanismo
+## Mechanism
 
-El hero es un `grid` que solo define columnas desde `lg`. En móvil la columna es
-implícita (`auto`), y un elemento de grid tiene `min-width: auto`: no puede ser
-más estrecho que su contenido mínimo. El contenido mínimo del `<h1>` es la
-palabra «TEMPORADA», que no se puede partir, con un tamaño mínimo en `rem`
-(`clamp(3.4rem, …)`) que crece con la letra del sistema. La columna se ensancha
-hasta esa palabra y arrastra con ella todo lo demás. El `overflow-hidden` de la
-sección recorta el sobrante en vez de mostrar una barra de desplazamiento, así
-que el fallo se ve como texto cortado.
+The hero is a `grid` that only defines columns from `lg` up. On mobile the
+column is implicit (`auto`), and a grid item has `min-width: auto`: it cannot be
+narrower than its minimum content. The `<h1>`'s minimum content is the word
+"TEMPORADA", which cannot be broken, with a minimum size in `rem`
+(`clamp(3.4rem, …)`) that grows with the system font. The column widens to that
+word and drags everything else with it. The section's `overflow-hidden` clips
+the excess instead of showing a scrollbar, so the failure reads as cut-off text.
 
-En escritorio ese mismo mecanismo es el diseño: la columna de texto toma el
-ancho de «TEMPORADA» a 7rem y el cartel ocupa lo que queda. El primer arreglo
-limitó también la columna en escritorio, y el hero cambió: título más pequeño,
-cartel más grande y hero más alto. Hubo que deshacerlo solo para escritorio.
+On desktop that same mechanism is the design: the text column takes the width of
+"TEMPORADA" at 7rem and the poster fills what is left. The first fix also
+constrained the column on desktop, and the hero changed: smaller title, larger
+poster and taller hero. It had to be undone for desktop only.
 
-## Qué lo impide ahora
+## What prevents it now
 
-- **Móvil**: la columna del hero es `minmax(0, 1fr)` y la de texto lleva
-  `min-w-0`, así que nunca supera el ancho disponible. El título se mide con
-  unidades de contenedor (`@container` y `text-[min(15cqw,7rem)]`): «TEMPORADA»
-  ocupa como mucho el ~96 % de su columna, sea cual sea la pantalla o la letra
-  del sistema.
-- **Escritorio (`lg`)**: se recuperan las columnas originales
-  (`1.1fr 0.9fr`), `min-width: auto` y sin contención (`container-type:
-  normal`), para que la columna vuelva a medirse por el título. A partir de
-  ~1150 px el hero es idéntico al original (comprobado píxel a píxel a 1280,
-  1536 y 1920 px); por debajo, el título
-  se reduce lo justo para que el cartel no se quede en 169 px.
-- Con dos regímenes distintos, cualquier cambio en el hero se comprueba en móvil
-  **y** en escritorio, comparando capturas con la versión anterior.
-- `tests/overflow.spec.ts` recorre las cinco páginas a 320 y 360 px, con la
-  letra al 100 % y al 130 %, y falla si algún elemento se sale de la pantalla.
+- **Mobile**: the hero column is `minmax(0, 1fr)` and the text column carries
+  `min-w-0`, so it never exceeds the available width. The title is sized in
+  container units (`@container` and `text-[min(15cqw,7rem)]`): "TEMPORADA" takes
+  at most ~96 % of its column, whatever the screen or the system font.
+- **Desktop (`lg`)**: the original columns are restored (`1.1fr 0.9fr`),
+  `min-width: auto` and no containment (`container-type: normal`), so the
+  column measures itself by the title again. From ~1150 px the hero is identical
+  to the original (checked pixel by pixel at 1280, 1536 and 1920 px); below
+  that, the title shrinks just enough that the poster does not end up at
+  169 px.
+- With two distinct regimes, any change to the hero is checked on mobile **and**
+  on desktop, comparing screenshots with the previous version.
+- `tests/overflow.spec.ts` walks all five pages at 320 and 360 px, with the font
+  at 100 % and 130 %, and fails if any element overflows the screen.

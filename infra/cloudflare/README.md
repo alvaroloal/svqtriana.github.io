@@ -45,9 +45,41 @@ removal is asserted by `scripts/check-dist.mjs` on every build:
 | `https://www.youtube.com` from `frame-src` | Videos are links to YouTube, not embeds. |
 | CSS/JS cache rule without fingerprints | Every stylesheet and script is emitted under `/_astro/` with a content hash. |
 
-`frame-src https://www.google.com` stays: `/encuentro` loads the Maps iframe,
-but only after the visitor presses "Ver mapa". The iframe does not exist in the
-served HTML, so no third-party request happens on page load.
+`frame-src` is `'none'`: no page embeds an iframe. YouTube videos are plain
+links and the Maps embed went away with `/encuentro`.
+
+## Answer engines
+
+`public/robots.txt` allows every crawler, and `src/pages/llms.txt.ts` generates
+`/llms.txt`: a plain-text summary of who the peña is, the season prices, the
+material and the four pages, so an assistant can answer without parsing the
+HTML. It is built from the same modules as the pages (`src/data/site.ts`,
+`temporada.ts`, `productos.ts`), so it cannot drift from them. The entity data
+it complements is the JSON-LD in `src/data/schema.ts`: `SportsClub` with
+`foundingDate`, `location` and `sameAs`, `Store` with `OfferCatalog`, and
+`VideoObject` for the spots.
+
+Two Cloudflare features must stay off, or the site stops being quotable:
+
+- **AI Crawl Control / managed `robots.txt`.** It serves Cloudflare's own
+  `robots.txt` instead of the origin's, which silently drops the `Allow: /` and
+  the `llms.txt` pointer above. Paid feature, so it is not modelled here.
+- **Bot Fight Mode and JavaScript Detections**, already held off in
+  `zone-settings.tf` — it challenges the crawlers that would otherwise read the
+  pages, and it injects the inline script the CSP cannot allow.
+
+Neither is enforceable from Terraform on the Free plan, so check the live edge
+after any dashboard change:
+
+```sh
+curl -s https://svqtriana.com/robots.txt
+curl -s -o /dev/null -w '%{http_code}\n' https://svqtriana.com/llms.txt
+```
+
+`llms.txt` is a proposal, not a standard any major model has committed to
+consuming. What actually gets the site quoted is being crawlable, having
+unambiguous entity data, and stating facts in prose an answer can lift — which
+is why the FAQ block lives there rather than in the HTML.
 
 ## Running it
 
@@ -177,8 +209,8 @@ Then re-run <https://securityheaders.com/?q=https%3A%2F%2Fsvqtriana.com>.
 
 A CSP is the one header here that can break the site rather than merely fail to
 protect it. After applying, load every page with the browser console open and
-confirm there are no `Refused to load` messages — the Google Maps iframe on
-`/encuentro` and the analytics beacon are the parts most likely to trip it.
+confirm there are no `Refused to load` messages — the Cloudflare Web Analytics
+beacon is the part most likely to trip it.
 
 ## Applied
 

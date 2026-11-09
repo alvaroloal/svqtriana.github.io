@@ -32,7 +32,7 @@ const image = ogImage.startsWith('http') ? ogImage : `${site.url}${ogImage}`;
 <meta name="author" content={site.author} />
 <link rel="canonical" href={canonical} />
 
-<!-- Compartir: JPEG estable y absoluta; los scrapers fallan con WebP. -->
+<!-- Sharing: a stable absolute JPEG; scrapers fail with WebP. -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content={canonical} />
 <meta property="og:title" content={title} />
@@ -60,7 +60,7 @@ const image = ogImage.startsWith('http') ? ogImage : `${site.url}${ogImage}`;
 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
 
-<!-- Solo las fuentes que pintan above the fold. -->
+<!-- Only the fonts that paint above the fold. -->
 <link rel="preload" as="font" href="/fonts/GlacialIndifference-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="/fonts/GlacialIndifference-Bold.woff2" type="font/woff2" crossorigin />
 

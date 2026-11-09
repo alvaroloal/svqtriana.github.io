@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
 const SITE = 'https://svqtriana.com';
-const PAGES = ['/', '/nosotros', '/productos', '/media', '/encuentro'];
+const PAGES = ['/', '/nosotros', '/productos', '/media'];
 
 export const GET: APIRoute = () => {
   const lastmod = new Date().toISOString().slice(0, 10);

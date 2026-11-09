@@ -2,13 +2,12 @@
   "ci": {
     "collect": {
       "startServerCommand": "node scripts/serve-dist.mjs 4321",
-      "startServerReadyPattern": "dist en",
+      "startServerReadyPattern": "serving dist on",
       "url": [
         "http://localhost:4321/",
         "http://localhost:4321/nosotros",
         "http://localhost:4321/productos",
-        "http://localhost:4321/media",
-        "http://localhost:4321/encuentro"
+        "http://localhost:4321/media"
       ],
       "numberOfRuns": 1,
       "settings": {
