@@ -9,12 +9,13 @@
         "http://localhost:4321/productos",
         "http://localhost:4321/media"
       ],
-      "numberOfRuns": 1,
+      "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--no-sandbox"
       }
     },
     "assert": {
+      "aggregationMethod": "median",
       "assertions": {
         "categories:performance": ["error", { "minScore": 0.9 }],
         "categories:accessibility": ["error", { "minScore": 1 }],
