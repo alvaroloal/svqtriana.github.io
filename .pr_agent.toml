@@ -44,10 +44,31 @@ fallback_models = ["openai/deepseek-v4-flash"]
 # `model_weak` deliberately absent: `auto_describe` is off so it would do nothing, and
 # the model upstream defaults it to is the one the pool rejects here.
 
-# NaN ids are not in LiteLLM's registry, so the budget must be stated or LiteLLM
-# assumes a small default and truncates the diff silently.
+# Two ceilings, deliberately different. Confusing them is what broke run 42562380120
+# on PR #35 (2026-11-09), so they are now stated apart and guarded by
+# scripts/check-harness.mjs.
+#
+# `custom_model_max_tokens` is LiteLLM's per-model CAPACITY. NaN ids are not in its
+# registry, so this must be stated or LiteLLM assumes a small default and truncates the
+# diff silently. It describes the model, so it stays at the model's capacity.
 custom_model_max_tokens = 200000
-max_model_tokens = 200000
+
+# `max_model_tokens` is PR-Agent's PROMPT budget — the guardrail that decides how much
+# diff is actually sent, and it must sit BELOW the capacity above or it never fires. It
+# was 200000, i.e. above every diff this repo produces, so it was inert: the PR #35 log
+# read `Tokens: 97390, total tokens under limit: 200000, returning full diff`, a
+# 97k-token prompt went out whole, and both models in the chain were killed at
+# `ai_timeout`. 32000 is upstream's default and is the point of the setting: a diff over
+# it is CLIPPED (upstream's `large_patch_policy` is "clip"), so an oversized PR gets a
+# partial review instead of eight minutes and no review at all.
+max_model_tokens = 32000
+
+# Upstream default is 120s, and 120s is not enough for a reasoning-class model even on a
+# clipped prompt: run 42562380120 lost four consecutive calls at 120.1-120.7s. This has
+# to be read together with `max_model_tokens` above and with `timeout-minutes` in
+# .github/workflows/pr-agent.yml — the handler retries each model once, so the worst case
+# is 2 models x 2 attempts x ai_timeout and that must fit inside the job budget.
+ai_timeout = 300
 
 response_language = "en-US"
 

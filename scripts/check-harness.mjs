@@ -249,6 +249,56 @@ for (const member of pool.pool ?? []) {
   );
 }
 
+// The reviewer's time budget is arithmetic that rots silently. Two things must hold:
+// the prompt budget must sit BELOW the model capacity (otherwise the guardrail is inert
+// and every diff is sent whole), and the whole chain must fit inside the job's own
+// timeout (otherwise GitHub cancels mid-inference and reports a bare cancellation
+// instead of a review). Run 42562380120 measured both failures at once: a 97390-token
+// diff declared "under limit: 200000" and four consecutive 120s calls.
+const promptBudget = Number(toml.match(/^\s*max_model_tokens\s*=\s*(\d+)/m)?.[1]);
+const modelCapacity = Number(toml.match(/^\s*custom_model_max_tokens\s*=\s*(\d+)/m)?.[1]);
+const aiTimeout = Number(toml.match(/^\s*ai_timeout\s*=\s*(\d+)/m)?.[1]);
+const jobMinutes = Number(workflow.match(/^\s*timeout-minutes:\s*(\d+)/m)?.[1]);
+
+check(
+  Number.isFinite(promptBudget) && Number.isFinite(modelCapacity),
+  `${PR_AGENT_TOML}: max_model_tokens and custom_model_max_tokens must both be stated as integers`,
+);
+check(
+  Number.isFinite(aiTimeout),
+  `${PR_AGENT_TOML}: [config] ai_timeout must be stated; without it PR-Agent silently ` +
+    `uses upstream's 120s, which a reasoning-class model does not answer in`,
+);
+check(
+  Number.isFinite(jobMinutes),
+  `${PR_AGENT_WORKFLOW}: timeout-minutes must be stated as an integer`,
+);
+
+if (Number.isFinite(promptBudget) && Number.isFinite(modelCapacity)) {
+  check(
+    promptBudget < modelCapacity,
+    `${PR_AGENT_TOML}: max_model_tokens (${promptBudget}) must be BELOW ` +
+      `custom_model_max_tokens (${modelCapacity}). At or above it the prompt guardrail never ` +
+      `fires and every diff is sent whole — the defect behind run 42562380120.`,
+  );
+}
+
+if (Number.isFinite(aiTimeout) && Number.isFinite(jobMinutes)) {
+  // pr_agent's litellm handler retries each model once, so the chain costs
+  // (1 + fallbacks) x 2 calls. The slack covers container setup and the guard below.
+  const ATTEMPTS_PER_MODEL = 2;
+  const SETUP_SLACK_SECONDS = 300;
+  const chainSize = 1 + fallbackModels.length;
+  const worstCase = chainSize * ATTEMPTS_PER_MODEL * aiTimeout + SETUP_SLACK_SECONDS;
+  check(
+    worstCase <= jobMinutes * 60,
+    `${PR_AGENT_WORKFLOW}: worst case is ${chainSize} model(s) x ${ATTEMPTS_PER_MODEL} attempts ` +
+      `x ${aiTimeout}s ai_timeout + ${SETUP_SLACK_SECONDS}s setup = ${worstCase}s, which exceeds ` +
+      `timeout-minutes: ${jobMinutes} (${jobMinutes * 60}s). GitHub would cancel the job ` +
+      `mid-inference. Raise timeout-minutes or lower ai_timeout.`,
+  );
+}
+
 if (failures.length > 0) {
   console.error(`\n${failures.length} failure(s) in the harness:\n`);
   for (const failure of failures) console.error(`- ${failure}`);
